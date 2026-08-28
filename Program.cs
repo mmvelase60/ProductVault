@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Prometheus;
 using ProductVault.Data;
 
 namespace ProductVault;
@@ -25,6 +26,7 @@ public class Program
         })
             .AddEntityFrameworkStores<ApplicationDbContext>();
         builder.Services.AddControllersWithViews();
+        builder.Services.AddHealthChecks();
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddScoped<IProductCodeGenerator, ProductCodeGenerator>();
         builder.Services.AddScoped<IExcelProductService, ExcelProductService>();
@@ -47,6 +49,7 @@ public class Program
         app.UseStaticFiles();
 
         app.UseRouting();
+        app.UseHttpMetrics(options => options.ReduceStatusCodeCardinality());
 
         app.UseAuthentication();
         app.UseAuthorization();
@@ -56,6 +59,11 @@ public class Program
             pattern: "{controller=Home}/{action=Index}/{id?}");
         app.MapControllers();
         app.MapRazorPages();
+        app.MapHealthChecks("/health");
+        if (app.Environment.IsDevelopment())
+        {
+            app.MapMetrics("/metrics");
+        }
 
         app.Run();
     }

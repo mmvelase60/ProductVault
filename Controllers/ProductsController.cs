@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ProductVault.Data;
 using ProductVault.Models;
+using ProductVault.Monitoring;
 using ProductVault.ViewModels;
 
 namespace ProductVault.Controllers;
@@ -37,7 +38,7 @@ public class ProductsController(ApplicationDbContext db, UserManager<IdentityUse
             image = await SaveImageAsync(model.Image);
             await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
             db.Products.Add(new Product { Name = model.Name.Trim(), Description = model.Description?.Trim(), Price = model.Price, CategoryId = model.CategoryId!.Value, ImagePath = image, ProductCode = await codes.NextAsync(DateTime.UtcNow), OwnerId = UserId, CreatedBy = UserId, CreatedDate = DateTime.UtcNow });
-            await db.SaveChangesAsync(); await transaction.CommitAsync();
+            await db.SaveChangesAsync(); await transaction.CommitAsync(); ProductVaultMetrics.ProductsCreated.Inc();
         }
         catch (Exception ex) when (ex is DbUpdateException or InvalidOperationException)
         { DeleteImage(image); ModelState.AddModelError(string.Empty, "The product could not be saved. Please try again."); await SetCategoriesAsync(); return View(model); }
@@ -77,7 +78,7 @@ public class ProductsController(ApplicationDbContext db, UserManager<IdentityUse
     {
         var product = await db.Products.SingleOrDefaultAsync(p => p.ProductId == id && p.OwnerId == UserId); if (product is null) return NotFound();
         var image = product.ImagePath; db.Products.Remove(product); await db.SaveChangesAsync(); DeleteImage(image);
-        TempData["Success"] = "Product deleted."; return RedirectToAction(nameof(Index));
+        ProductVaultMetrics.ProductsDeleted.Inc(); TempData["Success"] = "Product deleted."; return RedirectToAction(nameof(Index));
     }
 
     public async Task<IActionResult> Export()
@@ -100,7 +101,7 @@ public class ProductsController(ApplicationDbContext db, UserManager<IdentityUse
             if (invalid is not null) throw new InvalidOperationException($"Row {invalid.i + 2} has an invalid name, price, or active category code.");
             await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
             foreach (var row in rows) db.Products.Add(new Product { Name = row.Name, Description = row.Description, Price = row.Price, CategoryId = categories[row.CategoryCode].CategoryId, ProductCode = await codes.NextAsync(DateTime.UtcNow), OwnerId = UserId, CreatedBy = UserId, CreatedDate = DateTime.UtcNow });
-            await db.SaveChangesAsync(); await transaction.CommitAsync(); TempData["Success"] = $"Imported {rows.Count} products.";
+            await db.SaveChangesAsync(); await transaction.CommitAsync(); ProductVaultMetrics.ProductsCreated.Inc(rows.Count); TempData["Success"] = $"Imported {rows.Count} products.";
         }
         catch (Exception ex) when (ex is InvalidOperationException or IOException) { TempData["Error"] = ex.Message; }
         catch { TempData["Error"] = "The Excel file could not be imported. Check that it is a valid .xlsx workbook."; }

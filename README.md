@@ -108,6 +108,28 @@ GitHub Actions runs automatically for every pull request to `master` and every p
 
 This is continuous delivery: the verified package is always ready to deploy. A final deployment target (for example, Azure App Service) should be configured with its own GitHub environment and deployment credentials rather than committing any production secrets to this repository.
 
+## Local monitoring with Prometheus and Grafana
+
+ProductVault exposes a development-only Prometheus endpoint at `https://localhost:7253/metrics` and a liveness endpoint at `https://localhost:7253/health`. It records HTTP request counts, request duration, status-code groups, and catalogue activity counters for category/product creates and product deletes.
+
+1. Start ProductVault with the **https** profile in Visual Studio.
+2. Ensure Docker Desktop is running, then run:
+
+   ```powershell
+   docker compose -f docker-compose.monitoring.yml up -d
+   ```
+
+3. Open [Prometheus](http://localhost:9090/targets) and confirm that `productvault-webapp` is **UP**.
+4. Open [Grafana](http://localhost:3000/), sign in with `admin` / `admin`, and open **Dashboards → ProductVault → ProductVault Overview**.
+
+The dashboard and data source are automatically provisioned from version-controlled files. Stop the local monitoring stack with:
+
+```powershell
+docker compose -f docker-compose.monitoring.yml down
+```
+
+The `insecure_skip_verify` setting is strictly for Docker scraping the local HTTPS development certificate. Do not use it in a production deployment.
+
 ## Interview talking points
 
 ### How is each user's data protected?

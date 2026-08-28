@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProductVault.Data;
 using ProductVault.Models;
+using ProductVault.Monitoring;
 using ProductVault.ViewModels;
 
 namespace ProductVault.Controllers;
@@ -23,7 +24,7 @@ public class CategoriesController(ApplicationDbContext db, UserManager<IdentityU
         if (!ModelState.IsValid) return View(model);
         if (await db.Categories.AnyAsync(c => c.OwnerId == UserId && c.CategoryCode == model.CategoryCode)) { ModelState.AddModelError(nameof(model.CategoryCode), "This category code is already in use."); return View(model); }
         db.Categories.Add(new Category { Name = model.Name.Trim(), CategoryCode = model.CategoryCode, IsActive = model.IsActive, OwnerId = UserId, CreatedBy = UserId, CreatedDate = DateTime.UtcNow });
-        await db.SaveChangesAsync(); TempData["Success"] = "Category created."; return RedirectToAction(nameof(Index));
+        await db.SaveChangesAsync(); ProductVaultMetrics.CategoriesCreated.Inc(); TempData["Success"] = "Category created."; return RedirectToAction(nameof(Index));
     }
 
     public async Task<IActionResult> Edit(int id)
