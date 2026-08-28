@@ -1,4 +1,4 @@
 @model CategoryInputViewModel
 @{ ViewData["Title"] = "Edit category"; }
-<h1>Edit category</h1><form asp-action="Edit" class="col-md-6"><input asp-for="CategoryId" type="hidden" /><input asp-for="RowVersion" type="hidden" /><partial name="_Form" model="Model" /><button class="btn btn-primary">Save changes</button><a class="btn btn-link" asp-action="Index">Cancel</a></form>
+<section class="form-page"><p class="eyebrow">Organisation</p><h1>Edit category</h1><p class="text-muted">Inactive categories cannot be selected for new products or imports.</p><form asp-action="Edit" class="form-card form-card-narrow"><input asp-for="CategoryId" type="hidden" /><input asp-for="RowVersion" type="hidden" /><partial name="_Form" model="Model" /><div class="form-actions"><button class="btn btn-primary">Save changes</button><a class="btn btn-link" asp-action="Index">Cancel</a></div></form></section>
 @section Scripts { <partial name="_ValidationScriptsPartial" /> }

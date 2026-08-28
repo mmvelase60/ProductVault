@@ -1,18 +1,45 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
-}
+@model DashboardViewModel
+@{ ViewData["Title"] = User.Identity?.IsAuthenticated == true ? "Overview" : "A private product workspace"; }
 
-<div class="text-center">
-    <h1 class="display-4">Your product catalogue, safely separated.</h1>
-    @if (User.Identity?.IsAuthenticated == true)
-    {
-        <p class="lead">Manage categories, products, images, and Excel imports from one workspace.</p>
-        <a class="btn btn-primary me-2" asp-controller="Products" asp-action="Index">View products</a>
-        <a class="btn btn-outline-primary" asp-controller="Categories" asp-action="Index">Manage categories</a>
-    }
-    else
-    {
-        <p class="lead">Register to start building your private product catalogue.</p>
-        <a class="btn btn-primary" asp-area="Identity" asp-page="/Account/Register">Create account</a>
-    }
-</div>
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <section class="page-heading dashboard-heading">
+        <div><p class="eyebrow">Private workspace</p><h1>Welcome back.</h1><p class="text-muted mb-0">Keep your catalogue accurate, organised, and ready to share.</p></div>
+        <div class="d-flex gap-2"><a class="btn btn-outline-primary" asp-controller="Categories" asp-action="Create">Add category</a><a class="btn btn-primary" asp-controller="Products" asp-action="Create">Add product</a></div>
+    </section>
+
+    <section class="row g-3 mb-4" aria-label="Catalogue statistics">
+        <div class="col-sm-6 col-xl-3"><article class="metric-card"><span class="metric-label">Products</span><strong>@Model.ProductCount</strong><span>Your private catalogue</span></article></div>
+        <div class="col-sm-6 col-xl-3"><article class="metric-card"><span class="metric-label">Active categories</span><strong>@Model.ActiveCategoryCount</strong><span>of @Model.TotalCategoryCount total</span></article></div>
+        <div class="col-sm-6 col-xl-3"><article class="metric-card"><span class="metric-label">Catalogue value</span><strong>@Model.CatalogueValue.ToString("C")</strong><span>Based on current prices</span></article></div>
+        <div class="col-sm-6 col-xl-3"><article class="metric-card metric-card-accent"><span class="metric-label">Next step</span><strong>@(Model.ProductCount == 0 ? "Add stock" : "Stay current")</strong><a asp-controller="Products" asp-action="Index">Open products <span aria-hidden="true">→</span></a></article></div>
+    </section>
+
+    <section class="content-card">
+        <div class="content-card-header"><div><h2>Recently added</h2><p>Latest products in this workspace.</p></div><a class="btn btn-sm btn-outline-primary" asp-controller="Products" asp-action="Index">View all products</a></div>
+        @if (Model.RecentProducts.Any())
+        {
+            <div class="recent-products">
+                @foreach (var product in Model.RecentProducts)
+                {
+                    <a class="recent-product" asp-controller="Products" asp-action="Edit" asp-route-id="@product.ProductId">
+                        @if (!string.IsNullOrWhiteSpace(product.ImagePath)) { <img src="@product.ImagePath" alt="" /> } else { <span class="product-placeholder">@product.Name[..1].ToUpperInvariant()</span> }
+                        <span class="recent-product-main"><strong>@product.Name</strong><small>@product.Category?.Name · @product.ProductCode</small></span><span class="recent-product-price">@product.Price.ToString("C")</span>
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="empty-state compact"><span class="empty-icon">＋</span><h3>Your catalogue is ready.</h3><p>Create a category first, then add your first product.</p><a class="btn btn-primary" asp-controller="Categories" asp-action="Create">Create a category</a></div>
+        }
+    </section>
+}
+else
+{
+    <section class="hero-panel">
+        <div class="hero-copy"><p class="eyebrow text-primary">PRODUCT CATALOGUE MANAGEMENT</p><h1>Own your product data with confidence.</h1><p class="hero-lead">ProductVault gives every user a private, dependable workspace for categories, products, images, and Excel operations.</p><div class="d-flex flex-wrap gap-2"><a class="btn btn-primary btn-lg" asp-area="Identity" asp-page="/Account/Register">Create your workspace</a><a class="btn btn-outline-primary btn-lg" asp-area="Identity" asp-page="/Account/Login">Sign in</a></div></div>
+        <div class="hero-summary" aria-label="ProductVault highlights"><div class="summary-window"><span></span><span></span><span></span></div><div class="summary-line summary-line-wide"></div><div class="summary-metrics"><div><small>Products</small><strong>Private</strong></div><div><small>Imports</small><strong>Excel</strong></div></div><div class="summary-list"><div></div><div></div><div></div></div></div>
+    </section>
+    <section class="row g-3 mt-2"><div class="col-md-4"><article class="feature-card"><span>01</span><h2>Private by design</h2><p>Categories and products are scoped to the signed-in user.</p></article></div><div class="col-md-4"><article class="feature-card"><span>02</span><h2>Work at speed</h2><p>Import and export Excel files without losing control of your data.</p></article></div><div class="col-md-4"><article class="feature-card"><span>03</span><h2>Built to trust</h2><p>Validation, concurrency handling, auditing, and health checks are included.</p></article></div></section>
+}

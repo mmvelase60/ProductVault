@@ -1,4 +1,4 @@
 @model CategoryInputViewModel
 @{ ViewData["Title"] = "Add category"; }
-<h1>Add category</h1><form asp-action="Create" class="col-md-6"><partial name="_Form" model="Model" /><button class="btn btn-primary">Save category</button><a class="btn btn-link" asp-action="Index">Cancel</a></form>
+<section class="form-page"><p class="eyebrow">Organisation</p><h1>Add category</h1><p class="text-muted">Use a clear category name and a unique code for Excel imports.</p><form asp-action="Create" class="form-card form-card-narrow"><partial name="_Form" model="Model" /><div class="form-actions"><button class="btn btn-primary">Save category</button><a class="btn btn-link" asp-action="Index">Cancel</a></div></form></section>
 @section Scripts { <partial name="_ValidationScriptsPartial" /> }

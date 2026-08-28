@@ -14,7 +14,7 @@ public class CategoriesController(ApplicationDbContext db, UserManager<IdentityU
 {
     private string UserId => userManager.GetUserId(User)!;
 
-    public async Task<IActionResult> Index() => View(await db.Categories.AsNoTracking().Where(c => c.OwnerId == UserId).OrderBy(c => c.Name).ToListAsync());
+    public async Task<IActionResult> Index() => View(await db.Categories.AsNoTracking().Include(category => category.Products).Where(category => category.OwnerId == UserId).OrderBy(category => category.Name).ToListAsync());
     public IActionResult Create() => View(new CategoryInputViewModel());
 
     [HttpPost, ValidateAntiForgeryToken]

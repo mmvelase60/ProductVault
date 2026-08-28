@@ -17,12 +17,45 @@ public class ProductsController(ApplicationDbContext db, UserManager<IdentityUse
     private const int PageSize = 10;
     private string UserId => userManager.GetUserId(User)!;
 
-    public async Task<IActionResult> Index(int page = 1)
+    public async Task<IActionResult> Index(int page = 1, string? search = null, int? categoryId = null, string sort = "newest")
     {
         page = Math.Max(page, 1);
-        var query = db.Products.AsNoTracking().Include(p => p.Category).Where(p => p.OwnerId == UserId).OrderByDescending(p => p.CreatedDate);
-        var count = await query.CountAsync(); var totalPages = Math.Max(1, (int)Math.Ceiling(count / (double)PageSize)); page = Math.Min(page, totalPages);
-        return View(new ProductIndexViewModel { Products = await query.Skip((page - 1) * PageSize).Take(PageSize).ToListAsync(), CurrentPage = page, TotalPages = totalPages, TotalCount = count });
+        var query = db.Products.AsNoTracking().Include(product => product.Category).Where(product => product.OwnerId == UserId);
+        search = search?.Trim();
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(product => product.Name.Contains(search) || product.ProductCode.Contains(search) || (product.Description != null && product.Description.Contains(search)));
+        }
+
+        if (categoryId.HasValue)
+        {
+            query = query.Where(product => product.CategoryId == categoryId.Value);
+        }
+
+        query = sort switch
+        {
+            "name" => query.OrderBy(product => product.Name),
+            "price-asc" => query.OrderBy(product => product.Price),
+            "price-desc" => query.OrderByDescending(product => product.Price),
+            "code" => query.OrderBy(product => product.ProductCode),
+            _ => query.OrderByDescending(product => product.CreatedDate)
+        };
+
+        var count = await query.CountAsync();
+        var totalPages = Math.Max(1, (int)Math.Ceiling(count / (double)PageSize));
+        page = Math.Min(page, totalPages);
+        var categories = await db.Categories.AsNoTracking().Where(category => category.OwnerId == UserId).OrderBy(category => category.Name).ToListAsync();
+        return View(new ProductIndexViewModel
+        {
+            Products = await query.Skip((page - 1) * PageSize).Take(PageSize).ToListAsync(),
+            Categories = categories,
+            CurrentPage = page,
+            TotalPages = totalPages,
+            TotalCount = count,
+            Search = search,
+            CategoryId = categoryId,
+            Sort = sort
+        });
     }
 
     public async Task<IActionResult> Create() { await SetCategoriesAsync(); return View(new ProductInputViewModel()); }
