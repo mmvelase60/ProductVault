@@ -1,0 +1,18 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Your product catalogue, safely separated.</h1>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <p class="lead">Manage categories, products, images, and Excel imports from one workspace.</p>
+        <a class="btn btn-primary me-2" asp-controller="Products" asp-action="Index">View products</a>
+        <a class="btn btn-outline-primary" asp-controller="Categories" asp-action="Index">Manage categories</a>
+    }
+    else
+    {
+        <p class="lead">Register to start building your private product catalogue.</p>
+        <a class="btn btn-primary" asp-area="Identity" asp-page="/Account/Register">Create account</a>
+    }
+</div>
