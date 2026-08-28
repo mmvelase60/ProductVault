@@ -1,0 +1,4 @@
+@model ProductInputViewModel
+@{ ViewData["Title"] = "Edit product"; }
+<h1>Edit product</h1><form asp-action="Edit" enctype="multipart/form-data" class="col-lg-7"><input asp-for="ProductId" type="hidden" /><input asp-for="RowVersion" type="hidden" /><input asp-for="ExistingImagePath" type="hidden" /><partial name="_Form" model="Model" /><button class="btn btn-primary">Save changes</button><a class="btn btn-link" asp-action="Index">Cancel</a></form>
+@section Scripts { <partial name="_ValidationScriptsPartial" /> }

@@ -1,0 +1,7 @@
+@model ProductInputViewModel
+<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<div class="mb-3"><label asp-for="Name" class="form-label"></label><input asp-for="Name" class="form-control" autofocus /><span asp-validation-for="Name" class="text-danger"></span></div>
+<div class="mb-3"><label asp-for="Description" class="form-label"></label><textarea asp-for="Description" class="form-control" rows="4"></textarea><span asp-validation-for="Description" class="text-danger"></span></div>
+<div class="row"><div class="col-md-6 mb-3"><label asp-for="Price" class="form-label"></label><input asp-for="Price" class="form-control" /><span asp-validation-for="Price" class="text-danger"></span></div><div class="col-md-6 mb-3"><label asp-for="CategoryId" class="form-label"></label><select asp-for="CategoryId" asp-items="ViewBag.Categories" class="form-select"><option value="">Select a category</option></select><span asp-validation-for="CategoryId" class="text-danger"></span></div></div>
+<div class="mb-3"><label asp-for="Image" class="form-label"></label><input asp-for="Image" class="form-control" accept="image/jpeg,image/png,image/gif,image/webp" /><div class="form-text">JPG, PNG, GIF, or WEBP; maximum 5 MB.</div><span asp-validation-for="Image" class="text-danger"></span></div>
+@if (!string.IsNullOrWhiteSpace(Model.ExistingImagePath)) { <img src="@Model.ExistingImagePath" alt="Current product" class="img-thumbnail mb-3" style="max-height: 140px" /> }
