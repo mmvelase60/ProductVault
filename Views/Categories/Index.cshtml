@@ -1,0 +1,5 @@
+@model IReadOnlyList<Category>
+@{ ViewData["Title"] = "Categories"; }
+<div class="d-flex justify-content-between align-items-center mb-3"><div><h1>Categories</h1><p class="text-muted mb-0">Only you can view and manage these categories.</p></div><a class="btn btn-primary" asp-action="Create">Add category</a></div>
+@if (!Model.Any()) { <div class="alert alert-info">No categories yet. Add your first category before creating products.</div> }
+else { <div class="table-responsive"><table class="table table-hover align-middle"><thead><tr><th>Name</th><th>Code</th><th>Status</th><th></th></tr></thead><tbody>@foreach (var item in Model) { <tr><td>@item.Name</td><td><code>@item.CategoryCode</code></td><td>@(item.IsActive ? "Active" : "Inactive")</td><td class="text-end"><a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@item.CategoryId">Edit</a></td></tr> }</tbody></table></div> }

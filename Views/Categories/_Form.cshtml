@@ -1,0 +1,5 @@
+@model CategoryInputViewModel
+<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+<div class="mb-3"><label asp-for="Name" class="form-label"></label><input asp-for="Name" class="form-control" autofocus /><span asp-validation-for="Name" class="text-danger"></span></div>
+<div class="mb-3"><label asp-for="CategoryCode" class="form-label"></label><input asp-for="CategoryCode" class="form-control text-uppercase" maxlength="6" /><div class="form-text">Exactly 3 letters followed by 3 numbers, e.g. ABC123.</div><span asp-validation-for="CategoryCode" class="text-danger"></span></div>
+<div class="form-check mb-3"><input asp-for="IsActive" class="form-check-input" /><label asp-for="IsActive" class="form-check-label"></label></div>
