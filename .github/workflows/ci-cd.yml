@@ -1,0 +1,79 @@
+name: CI/CD
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: productvault-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_VERSION: 8.0.x
+  BUILD_CONFIGURATION: Release
+
+jobs:
+  ci:
+    name: Build and test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v6
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore ProductVault.sln
+
+      - name: Build
+        run: dotnet build ProductVault.sln --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
+
+      - name: Run tests
+        run: dotnet test ProductVault.sln --configuration ${{ env.BUILD_CONFIGURATION }} --no-build --logger "trx;LogFileName=test-results.trx" --results-directory TestResults
+
+      - name: Upload test results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults
+          if-no-files-found: warn
+          retention-days: 14
+
+  delivery:
+    name: Publish deployable artifact
+    needs: ci
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v6
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        run: dotnet restore ProductVault.csproj
+
+      - name: Publish application
+        run: dotnet publish ProductVault.csproj --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore --output ./publish
+
+      - name: Upload deployment package
+        uses: actions/upload-artifact@v4
+        with:
+          name: productvault-webapp
+          path: ./publish
+          retention-days: 30

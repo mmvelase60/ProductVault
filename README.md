@@ -102,6 +102,12 @@ dotnet test
 
 At the time of submission, all 9 tests pass.
 
+## CI/CD
+
+GitHub Actions runs automatically for every pull request to `master` and every push to `master`. The pipeline restores packages, builds the solution in Release mode, runs the xUnit suite, and keeps the TRX test report for 14 days. A successful push to `master` then publishes a deployable application package and stores it as the `productvault-webapp` artifact for 30 days.
+
+This is continuous delivery: the verified package is always ready to deploy. A final deployment target (for example, Azure App Service) should be configured with its own GitHub environment and deployment credentials rather than committing any production secrets to this repository.
+
 ## Interview talking points
 
 ### How is each user's data protected?
