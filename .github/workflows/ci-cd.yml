@@ -39,7 +39,7 @@ jobs:
         run: dotnet build ProductVault.sln --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
 
       - name: Run tests
-        run: dotnet test ProductVault.sln --configuration ${{ env.BUILD_CONFIGURATION }} --no-build --logger "trx;LogFileName=test-results.trx" --results-directory TestResults
+        run: dotnet test ProductVault.sln --configuration ${{ env.BUILD_CONFIGURATION }} --no-build --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage" --results-directory TestResults
 
       - name: Upload test results
         if: ${{ always() }}

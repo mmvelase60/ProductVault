@@ -2,6 +2,8 @@
 
 ProductVault is a .NET 8 ASP.NET Core MVC application for securely managing a private catalogue of categories and products. It also exposes protected JSON API endpoints under `/api/categories` and `/api/products` for integration use.
 
+> For the full interview-ready technical pack, start with the [documentation index](docs/index.md).
+
 ## Highlights
 
 - ASP.NET Core Identity registration and login; every data query is restricted to the signed-in user's `OwnerId`.
