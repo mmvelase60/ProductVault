@@ -11,6 +11,12 @@ ProductVault is a .NET 8 ASP.NET Core MVC application for securely managing a pr
 - Excel import (up to 500 rows) and complete Excel export.
 - SQL Server / EF Core migrations, audit fields, antiforgery protection, validation, and error feedback.
 
+## Product workflow preview
+
+The product list gives the user quick access to paging, Excel import/export, and safe edit/delete actions. The screenshot uses a local demonstration account and sample data.
+
+![ProductVault product list](docs/screenshots/product-list.png)
+
 ## Prerequisites
 
 - .NET 8 SDK
@@ -79,3 +85,37 @@ The MVC session cookie protects the API, so sign in before calling it from an ap
 - `GET`, `POST /api/products`; `PUT`, `DELETE /api/products/{id}`
 
 Product list requests accept `page` and `pageSize` (default 10). API clients must apply ordinary same-origin/XSRF protections when using cookie authentication.
+
+## Testing
+
+The solution includes an xUnit test project with focused tests for the business rules that are easiest to regress:
+
+- category-code format validation;
+- first, sequential, and new-month product-code generation;
+- Excel import-column parsing.
+
+Run the suite from the repository root:
+
+```powershell
+dotnet test
+```
+
+At the time of submission, all 9 tests pass.
+
+## Interview talking points
+
+### How is each user's data protected?
+
+Every `Category` and `Product` stores an `OwnerId`, taken from the authenticated Identity user. Every controller and API query filters by that value before it reads, updates, or deletes a record. This means guessing another record's numeric ID still results in `404 Not Found` rather than data exposure.
+
+### Why use a service for product codes?
+
+`ProductCodeGenerator` gives one clear home to the `yyyyMM-###` rule instead of spreading it across controllers. Product creation and Excel import run the generator inside a serializable database transaction, while the database's unique index adds a second safeguard against duplicate product codes.
+
+### How is concurrent editing handled?
+
+Both aggregate tables include SQL Server `rowversion` columns. The edit workflow sends the original value back with the form, so EF Core detects an update that happened after the user opened the page and returns a clear retry message instead of silently overwriting newer changes.
+
+### Why MVC and a separate API?
+
+Razor MVC meets the server-rendered web requirement quickly and securely, while the protected `/api/categories` and `/api/products` endpoints make the same domain available for a future SPA, mobile client, or integration without duplicating core rules.
