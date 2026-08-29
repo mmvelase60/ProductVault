@@ -7,7 +7,7 @@ sequenceDiagram
     actor User
     participant UI as Razor product form
     participant Controller as ProductsController
-    participant DB as SQL Server
+    participant DB as MySQL
     participant Code as ProductCodeGenerator
 
     User->>UI: Submit product, category, optional image

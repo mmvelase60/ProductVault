@@ -27,7 +27,7 @@ Every category/product query includes an `OwnerId == currentUserId` filter. This
 
 ## Data integrity and concurrency
 
-- SQL Server `rowversion` values detect stale edit submissions and prevent lost updates.
+- MySQL timestamp-backed concurrency tokens detect stale edit submissions and prevent lost updates.
 - Product-code generation runs in a serializable transaction, with a unique database index as a final duplicate safeguard.
 - Foreign-key restriction prevents category deletion from silently breaking existing products.
 

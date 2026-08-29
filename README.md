@@ -11,7 +11,7 @@ ProductVault is a .NET 8 ASP.NET Core MVC application for securely managing a pr
 - Product CRUD with 10-item paging, image uploads, and database-backed optimistic concurrency (`rowversion`).
 - Product codes automatically generated as `yyyyMM-###` inside a serializable transaction.
 - Excel import (up to 500 rows) and complete Excel export.
-- SQL Server / EF Core migrations, audit fields, antiforgery protection, validation, and error feedback.
+- MySQL / EF Core migrations, audit fields, antiforgery protection, validation, and error feedback.
 
 ## Product workflow preview
 
@@ -22,16 +22,23 @@ The product list gives the user quick access to paging, Excel import/export, and
 ## Prerequisites
 
 - .NET 8 SDK
-- SQL Server LocalDB (included with Visual Studio) or SQL Server Express/Developer edition
+- MySQL 8.0 running on `localhost:3309`
 
 ## Run locally
 
 1. Restore packages: `dotnet restore`
-2. Create the schema: `dotnet ef database update`
-3. Run: `dotnet run`
-4. Open the HTTPS URL displayed in the terminal and register an account.
+2. Store your local password outside the repository:
 
-The default connection is LocalDB in `appsettings.json`. For another SQL Server instance, replace `ConnectionStrings:DefaultConnection` with your server connection string; keep credentials out of source control by using user secrets or environment variables.
+   ```powershell
+   dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost;Port=3309;Database=productvault;User ID=root;Password=YOUR_MYSQL_PASSWORD;"
+   ```
+
+   If your local `root` user has no password, omit `Password=...` from the connection string.
+3. Create the schema: `dotnet ef database update`
+4. Run: `dotnet run`
+5. Open the HTTPS URL displayed in the terminal and register an account.
+
+The default non-secret connection targets `localhost:3309/productvault` as `root`. User Secrets override it locally, keeping passwords out of source control. Change the host, port, username, or database name through the same `ConnectionStrings:DefaultConnection` secret when needed.
 
 ## Excel import layout
 
@@ -50,7 +57,7 @@ The solution uses a practical N-tier layout:
 - **Presentation:** Razor MVC controllers/views and a protected REST API.
 - **Application services:** product-code generation and Excel read/export services.
 - **Domain:** `Category` and `Product` entities with audit and concurrency fields.
-- **Infrastructure:** EF Core `ApplicationDbContext`, SQL Server, Identity, and local image storage.
+- **Infrastructure:** EF Core `ApplicationDbContext`, MySQL, Identity, and local image storage.
 
 ## Data model
 
@@ -144,7 +151,7 @@ Every `Category` and `Product` stores an `OwnerId`, taken from the authenticated
 
 ### How is concurrent editing handled?
 
-Both aggregate tables include SQL Server `rowversion` columns. The edit workflow sends the original value back with the form, so EF Core detects an update that happened after the user opened the page and returns a clear retry message instead of silently overwriting newer changes.
+Both aggregate tables include MySQL timestamp-backed concurrency tokens. The edit workflow sends the original value back with the form, so EF Core detects an update that happened after the user opened the page and returns a clear retry message instead of silently overwriting newer changes.
 
 ### Why MVC and a separate API?
 

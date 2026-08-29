@@ -13,7 +13,7 @@ flowchart TB
     Services --> EF[EF Core ApplicationDbContext]
     MVC --> EF
     API --> EF
-    EF --> SQL[(SQL Server)]
+    EF --> SQL[(MySQL)]
     MVC --> Files[Local product image storage]
     App[ASP.NET Core application] --> Metrics[/metrics endpoint/]
     Prometheus --> Metrics
@@ -27,13 +27,13 @@ flowchart TB
 | Presentation | Razor views, MVC controllers, REST API controllers | Render screens, enforce request validation, return user-friendly errors. |
 | Application | `ProductCodeGenerator`, `ExcelProductService` | Hold reusable business workflows such as product-code creation and Excel conversion. |
 | Domain | `Product`, `Category`, `AuditableEntity` | Represent catalogue rules, audit state, ownership, and concurrency data. |
-| Infrastructure | EF Core, SQL Server, Identity, local image storage | Persist data, authenticate users, store images, and apply migrations. |
+| Infrastructure | EF Core, MySQL, Identity, local image storage | Persist data, authenticate users, store images, and apply migrations. |
 | Observability | prometheus-net, Prometheus, Grafana | Collect request/business metrics and visualize them locally. |
 
 ## Key design choices
 
 - **Modular monolith:** avoids distributed-system complexity while leaving clear boundaries for future extraction.
 - **Ownership at query level:** every data read and mutation filters by the authenticated `OwnerId`.
-- **Optimistic concurrency:** SQL Server `rowversion` detects conflicting product/category edits.
+- **Optimistic concurrency:** MySQL timestamp-backed concurrency tokens detect conflicting product/category edits.
 - **Database constraints as safeguards:** indexes protect category-code and product-code uniqueness even if application logic is bypassed.
 - **Local-first monitoring:** `/metrics` is only mapped in Development; Grafana and Prometheus run through Docker Compose.

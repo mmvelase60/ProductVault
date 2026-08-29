@@ -6,7 +6,7 @@ This matrix maps the assignment requirements to implementation evidence and veri
 | --- | --- | --- |
 | C#, .NET 8, ASP.NET Core | `ProductVault.csproj`, `Program.cs` | Build the solution. |
 | MVC/Razor UI | `Controllers/`, `Views/` | Run the application and navigate the UI. |
-| EF Core + SQL Server | `ApplicationDbContext`, migrations, `appsettings.json` | Run `Update-Database`. |
+| EF Core + MySQL | `ApplicationDbContext`, migrations, `appsettings.json` | Run `dotnet ef database update`. |
 | Registration and login | ASP.NET Core Identity in `Areas/Identity`, `Program.cs` | Register and sign in. |
 | Each user manages only own data | `OwnerId` on entities; ownership filters in controllers/API | Sign in as two accounts and try another record ID. |
 | Category view/add/edit | `CategoriesController`, `Views/Categories/` | Complete the category acceptance tests. |
@@ -22,7 +22,7 @@ This matrix maps the assignment requirements to implementation evidence and veri
 | Concurrency | `RowVersion` fields and edit handling | Submit a stale edit after a second update. |
 | Validation and exception handling | Data annotations, model state, guarded file/import workflows | Test invalid values and malformed imports. |
 | API protection | `[Authorize]` on API controllers | Call API unauthenticated and authenticated. |
-| Auditing | `AuditableEntity` fields set in controllers | Inspect created/updated records in SQL Server. |
+| Auditing | `AuditableEntity` fields set in controllers | Inspect created/updated records in MySQL. |
 | Unit tests | `tests/ProductVault.Tests` | Run `dotnet test ProductVault.sln`. |
 | ERD, setup, technical docs | `README.md`, `docs/` | Review [documentation index](index.md). |
 | GitHub source control | Commit history and Actions workflow | Review the public repository and CI run. |

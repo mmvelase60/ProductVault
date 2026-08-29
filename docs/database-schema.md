@@ -1,6 +1,6 @@
 # Database schema
 
-The schema is created by EF Core migrations and targets SQL Server. The generated SQL script is available at [`Data/ProductVault.sql`](../Data/ProductVault.sql).
+The schema is created by EF Core migrations and targets MySQL 8.0. A reviewable migration script is checked in at [`Data/ProductVault.mysql.sql`](../Data/ProductVault.mysql.sql); regenerate it with `dotnet ef migrations script` after schema changes.
 
 ```mermaid
 erDiagram
@@ -23,7 +23,7 @@ erDiagram
         datetime CreatedDate
         string UpdatedBy
         datetime UpdatedDate
-        rowversion RowVersion
+        timestamp RowVersion
     }
     Products {
         int ProductId PK
@@ -38,7 +38,7 @@ erDiagram
         datetime CreatedDate
         string UpdatedBy
         datetime UpdatedDate
-        rowversion RowVersion
+        timestamp RowVersion
     }
 ```
 
@@ -56,5 +56,5 @@ erDiagram
 - Products cannot be deleted through a category delete because the relationship uses `DeleteBehavior.Restrict`.
 - `Price` uses `decimal(18,2)` to avoid floating-point currency errors.
 - `OwnerId` and `CreatedBy` are required for both domain tables.
-- `RowVersion` is a SQL Server-managed value that prevents lost updates.
+- `RowVersion` is a MySQL timestamp-backed concurrency token that prevents lost updates.
 - Product codes are globally unique; category codes are unique within the owning user's catalogue.
