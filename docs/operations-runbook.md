@@ -44,7 +44,7 @@ docker compose -f docker-compose.monitoring.yml down --volumes
 | Symptom | Check / resolution |
 | --- | --- |
 | Visual Studio has no startup item | Open `ProductVault.sln`, not the folder or only the `.csproj` file. |
-| `dotnet ef database update` cannot connect | Start MySQL on port 3309 and verify the User Secrets connection string. |
+| `dotnet ef database update` cannot connect | Start MySQL on port 3306 and verify the User Secrets connection string. |
 | Prometheus target is DOWN | Restart ProductVault with **https** (not IIS Express), then check `https://localhost:7253/metrics` in the browser. |
 | Docker cannot start containers | Start Docker Desktop, then rerun the compose command. First-time image pulls can take several minutes. |
 | Grafana dashboard is missing | Restart the stack. Check that the `Monitoring/Grafana` folders remain mounted and unmodified. |

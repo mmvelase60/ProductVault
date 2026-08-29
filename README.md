@@ -22,7 +22,7 @@ The product list gives the user quick access to paging, Excel import/export, and
 ## Prerequisites
 
 - .NET 8 SDK
-- MySQL 8.0 running on `localhost:3309`
+- MySQL 8.0 running on `localhost:3306`
 
 ## Run locally
 
@@ -30,7 +30,7 @@ The product list gives the user quick access to paging, Excel import/export, and
 2. Store your local password outside the repository:
 
    ```powershell
-   dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost;Port=3309;Database=productvault;User ID=root;Password=YOUR_MYSQL_PASSWORD;"
+   dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost;Port=3306;Database=productvault;User ID=root;Password=YOUR_MYSQL_PASSWORD;"
    ```
 
    If your local `root` user has no password, omit `Password=...` from the connection string.
@@ -38,7 +38,7 @@ The product list gives the user quick access to paging, Excel import/export, and
 4. Run: `dotnet run`
 5. Open the HTTPS URL displayed in the terminal and register an account.
 
-The default non-secret connection targets `localhost:3309/productvault` as `root`. User Secrets override it locally, keeping passwords out of source control. Change the host, port, username, or database name through the same `ConnectionStrings:DefaultConnection` secret when needed.
+The default non-secret connection targets `localhost:3306/productvault` as `root`. User Secrets override it locally, keeping passwords out of source control. Change the host, port, username, or database name through the same `ConnectionStrings:DefaultConnection` secret when needed.
 
 ## Excel import layout
 
