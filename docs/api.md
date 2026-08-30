@@ -26,6 +26,8 @@ The response contains `accessToken`, `expiresAt`, and `email`.
 
 `GET /dashboard` returns product/category counters, total catalogue value, and five recent products for the authenticated user.
 
+`POST /dashboard/demo-data` creates three categories and five sample products in the caller's empty workspace. It returns `409 Conflict` once that workspace contains catalogue data, preventing duplicate sample records.
+
 ## Categories
 
 | Method | Path | Purpose |

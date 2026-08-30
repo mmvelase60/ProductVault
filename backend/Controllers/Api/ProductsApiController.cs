@@ -114,13 +114,16 @@ public class ProductsApiController(ApplicationDbContext db, UserManager<Identity
             var categories = await db.Categories.Where(category => category.OwnerId == UserId && category.IsActive).ToDictionaryAsync(category => category.CategoryCode, StringComparer.OrdinalIgnoreCase);
             var invalid = rows.Select((row, index) => new { row, index }).FirstOrDefault(item => item.row.Price <= 0 || string.IsNullOrWhiteSpace(item.row.Name) || !categories.ContainsKey(item.row.CategoryCode));
             if (invalid is not null) return BadRequest(new { message = $"Row {invalid.index + 2} has an invalid name, price, or active category code." });
-            await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
-            foreach (var row in rows)
+            await db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
             {
-                db.Products.Add(new Product { Name = row.Name, Description = row.Description, Price = row.Price, CategoryId = categories[row.CategoryCode].CategoryId, ProductCode = await codes.NextAsync(DateTime.UtcNow), OwnerId = UserId, CreatedBy = UserId, CreatedDate = DateTime.UtcNow });
-            }
-            await db.SaveChangesAsync();
-            await transaction.CommitAsync();
+                await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+                foreach (var row in rows)
+                {
+                    db.Products.Add(new Product { Name = row.Name, Description = row.Description, Price = row.Price, CategoryId = categories[row.CategoryCode].CategoryId, ProductCode = await codes.NextAsync(DateTime.UtcNow), OwnerId = UserId, CreatedBy = UserId, CreatedDate = DateTime.UtcNow });
+                    await db.SaveChangesAsync();
+                }
+                await transaction.CommitAsync();
+            });
             ProductVaultMetrics.ProductsCreated.Inc(rows.Count);
             return Ok(new { imported = rows.Count });
         }

@@ -69,7 +69,7 @@ pnpm install
 pnpm start
 ```
 
-Open `http://localhost:4200`, register an account, then create a category and product.
+Open the localhost URL printed by Angular (normally `http://localhost:4200`), register an account, then create a category and product. An empty workspace also offers a **Load demo data** button for a ready-to-present catalogue.
 
 ## API authentication
 

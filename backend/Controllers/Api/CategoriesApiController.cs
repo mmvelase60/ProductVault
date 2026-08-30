@@ -20,6 +20,8 @@ public class CategoriesApiController(ApplicationDbContext db, UserManager<Identi
     [HttpPost]
     public async Task<ActionResult<CategoryResponse>> Create(CategoryRequest request)
     {
+        if (string.IsNullOrWhiteSpace(request.Name) || string.IsNullOrWhiteSpace(request.CategoryCode))
+            return BadRequest(new { errors = new { category = "Category name and code are required." } });
         var code = request.CategoryCode.Trim().ToUpperInvariant();
         if (!System.Text.RegularExpressions.Regex.IsMatch(code, "^[A-Z]{3}[0-9]{3}$")) return BadRequest(new { errors = new { categoryCode = "Use 3 letters followed by 3 numbers (ABC123)." } });
         if (await db.Categories.AnyAsync(c => c.OwnerId == UserId && c.CategoryCode == code)) return Conflict(new { message = "This category code is already in use." });
@@ -33,6 +35,8 @@ public class CategoriesApiController(ApplicationDbContext db, UserManager<Identi
     public async Task<IActionResult> Update(int id, CategoryRequest request)
     {
         var category = await db.Categories.SingleOrDefaultAsync(c => c.CategoryId == id && c.OwnerId == UserId); if (category is null) return NotFound();
+        if (string.IsNullOrWhiteSpace(request.Name) || string.IsNullOrWhiteSpace(request.CategoryCode))
+            return BadRequest(new { errors = new { category = "Category name and code are required." } });
         var code = request.CategoryCode.Trim().ToUpperInvariant();
         if (!System.Text.RegularExpressions.Regex.IsMatch(code, "^[A-Z]{3}[0-9]{3}$")) return BadRequest(new { message = "Category code must follow ABC123." });
         if (await db.Categories.AnyAsync(c => c.OwnerId == UserId && c.CategoryCode == code && c.CategoryId != id)) return Conflict(new { message = "This category code is already in use." });
