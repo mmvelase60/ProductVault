@@ -21,7 +21,7 @@ Every category/product query includes an `OwnerId == currentUserId` filter. This
 ## Request protection
 
 - The API validates JWT issuer, audience, signature, and expiry before protected endpoints run.
-- CORS permits only the local Angular development origin (`http://localhost:4200`).
+- In Development, CORS permits HTTP origins on `localhost` so Angular can use a fallback port when `4200` is busy. Production uses the explicit `Cors:AllowedOrigins` configuration.
 - Identity password hashing is provided by ASP.NET Core Identity; the JWT signing key is stored in User Secrets, never source control.
 - HTTPS redirection and HSTS are enabled outside Development.
 - API endpoints require a valid bearer token. A production deployment should replace the local token issuer with a managed identity/OAuth provider and secure token storage strategy.

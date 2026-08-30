@@ -49,10 +49,23 @@ public class Program
                 };
             });
         builder.Services.AddAuthorization();
-        builder.Services.AddCors(options => options.AddPolicy("angular", policy => policy
-            .WithOrigins("http://localhost:4200")
-            .AllowAnyHeader()
-            .AllowAnyMethod()));
+        var configuredCorsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+        builder.Services.AddCors(options => options.AddPolicy("angular", policy =>
+        {
+            if (builder.Environment.IsDevelopment())
+            {
+                // Angular selects another local port when its preferred port is occupied.
+                policy.SetIsOriginAllowed(origin => Uri.TryCreate(origin, UriKind.Absolute, out var uri)
+                    && uri.Scheme == Uri.UriSchemeHttp
+                    && uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase));
+            }
+            else
+            {
+                policy.WithOrigins(configuredCorsOrigins);
+            }
+
+            policy.AllowAnyHeader().AllowAnyMethod();
+        }));
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
