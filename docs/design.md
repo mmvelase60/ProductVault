@@ -51,4 +51,4 @@ flowchart LR
 
 ## Responsive design
 
-The Angular UI uses fluid page spacing and typography, a mobile navigation menu, and 44px minimum interactive targets. Dashboard metrics collapse from three columns to one on smaller screens; filters and forms reflow into single-column controls; and catalogue tables retain every column through touch-friendly horizontal scrolling instead of hiding actions or data.
+The Angular UI uses fluid page spacing and typography, a mobile navigation menu, and 44px minimum interactive targets. Dashboard metrics collapse from three columns to one on smaller screens; filters and forms reflow into single-column controls; and catalogue tables retain every column through touch-friendly horizontal scrolling instead of hiding actions or data. Loading, saving, importing, exporting, and deleting states disable the relevant action and provide clear feedback to prevent duplicate requests.

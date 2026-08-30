@@ -2,8 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { AuthResponse } from './models';
-
-const apiUrl = 'https://localhost:7253/api/auth';
+import { apiUrl } from './api.config';
 const storageKey = 'productvault-session';
 
 @Injectable({ providedIn: 'root' })
@@ -17,11 +16,11 @@ export class AuthService {
   get isAuthenticated(): boolean { return this.token !== null; }
 
   login(email: string, password: string): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${apiUrl}/login`, { email, password }).pipe(tap(session => this.store(session)));
+    return this.http.post<AuthResponse>(`${apiUrl}/auth/login`, { email, password }).pipe(tap(session => this.store(session)));
   }
 
   register(email: string, password: string): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${apiUrl}/register`, { email, password }).pipe(tap(session => this.store(session)));
+    return this.http.post<AuthResponse>(`${apiUrl}/auth/register`, { email, password }).pipe(tap(session => this.store(session)));
   }
 
   logout(): void { localStorage.removeItem(storageKey); this.sessionSubject.next(null); }

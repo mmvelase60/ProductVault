@@ -2,8 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Category, Dashboard, Product, ProductPage } from './models';
-
-const apiUrl = 'https://localhost:7253/api';
+import { apiUrl } from './api.config';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
