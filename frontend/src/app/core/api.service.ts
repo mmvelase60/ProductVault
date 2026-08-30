@@ -9,6 +9,7 @@ const apiUrl = 'https://localhost:7253/api';
 export class ApiService {
   constructor(private readonly http: HttpClient) {}
   dashboard(): Observable<Dashboard> { return this.http.get<Dashboard>(`${apiUrl}/dashboard`); }
+  seedDemoData(): Observable<{ message: string }> { return this.http.post<{ message: string }>(`${apiUrl}/dashboard/demo-data`, {}); }
   categories(): Observable<Category[]> { return this.http.get<Category[]>(`${apiUrl}/categories`); }
   createCategory(input: { name: string; categoryCode: string; isActive: boolean }): Observable<Category> { return this.http.post<Category>(`${apiUrl}/categories`, input); }
   updateCategory(category: Category): Observable<void> { return this.http.put<void>(`${apiUrl}/categories/${category.categoryId}`, category); }
