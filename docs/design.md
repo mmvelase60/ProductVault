@@ -5,13 +5,13 @@
 ```mermaid
 sequenceDiagram
     actor User
-    participant UI as Razor product form
-    participant Controller as ProductsController
+    participant UI as Angular product form
+    participant Controller as ProductsApiController
     participant DB as MySQL
     participant Code as ProductCodeGenerator
 
     User->>UI: Submit product, category, optional image
-    UI->>Controller: POST /Products/Create
+    UI->>Controller: POST /api/products with bearer token
     Controller->>DB: Verify active category belongs to user
     Controller->>Controller: Validate input and image
     Controller->>DB: Begin serializable transaction
@@ -21,7 +21,7 @@ sequenceDiagram
     Controller->>DB: Save product with OwnerId and audit fields
     DB-->>Controller: New rowversion
     Controller->>DB: Commit transaction
-    Controller-->>User: Product list with success message
+    Controller-->>User: JSON response; Angular refreshes product list
 ```
 
 ## Ownership and concurrency design

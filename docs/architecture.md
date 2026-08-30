@@ -4,17 +4,13 @@ ProductVault is a modular monolith following a practical N-tier structure. The a
 
 ```mermaid
 flowchart TB
-    Browser[Browser / Razor UI] --> MVC[ASP.NET Core MVC controllers]
-    Client[Future API client] --> API[Protected REST API controllers]
-    MVC --> Identity[ASP.NET Core Identity]
-    API --> Identity
-    MVC --> Services[Application services]
+    Browser[Angular SPA] --> API[ASP.NET Core Web API]
+    API --> Identity[ASP.NET Core Identity + JWT]
     API --> Services
     Services --> EF[EF Core ApplicationDbContext]
-    MVC --> EF
     API --> EF
     EF --> SQL[(MySQL)]
-    MVC --> Files[Local product image storage]
+    API --> Files[Local product image storage]
     App[ASP.NET Core application] --> Metrics[/metrics endpoint/]
     Prometheus --> Metrics
     Grafana --> Prometheus
@@ -24,7 +20,8 @@ flowchart TB
 
 | Layer | Main components | Responsibility |
 | --- | --- | --- |
-| Presentation | Razor views, MVC controllers, REST API controllers | Render screens, enforce request validation, return user-friendly errors. |
+| Frontend | Angular standalone components, route guard, JWT interceptor | Render the SPA, validate forms, and call the API with bearer tokens. |
+| API | ASP.NET Core REST controllers, JWT authentication, CORS | Authorize requests, validate input, and return JSON/file responses. |
 | Application | `ProductCodeGenerator`, `ExcelProductService` | Hold reusable business workflows such as product-code creation and Excel conversion. |
 | Domain | `Product`, `Category`, `AuditableEntity` | Represent catalogue rules, audit state, ownership, and concurrency data. |
 | Infrastructure | EF Core, MySQL, Identity, local image storage | Persist data, authenticate users, store images, and apply migrations. |
@@ -33,6 +30,7 @@ flowchart TB
 ## Key design choices
 
 - **Modular monolith:** avoids distributed-system complexity while leaving clear boundaries for future extraction.
+- **JWT boundary:** Angular owns the browser UI; the API verifies bearer tokens and derives the user ID server-side.
 - **Ownership at query level:** every data read and mutation filters by the authenticated `OwnerId`.
 - **Optimistic concurrency:** MySQL timestamp-backed concurrency tokens detect conflicting product/category edits.
 - **Database constraints as safeguards:** indexes protect category-code and product-code uniqueness even if application logic is bypassed.

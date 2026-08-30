@@ -11,7 +11,7 @@
 
 ## Next release: usability and resilience
 
-- [ ] Product search, sorting, and category filtering
+- [x] Product search, sorting, and category filtering
 - [ ] Category delete/deactivate workflow with clear product-impact messaging
 - [ ] Image replacement/removal option in the edit screen
 - [ ] Downloadable Excel import template and per-row error report
@@ -27,7 +27,7 @@
 
 ## Future: integration scale
 
-- [ ] JWT/OAuth only when a separate SPA, mobile app, or external client is introduced
+- [ ] OAuth/OpenID Connect when a third-party identity provider or production SSO requirement is introduced
 - [ ] Background queue for large imports or image processing when the workload becomes asynchronous
 - [ ] Cloud deployment target when there is a concrete hosting requirement
 

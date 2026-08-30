@@ -2,15 +2,28 @@
 
 ## Start the application
 
-1. Open `ProductVault.sln` in Visual Studio.
-2. Configure your MySQL password with User Secrets, then run `dotnet ef database update` if the database has not yet been created.
-3. Select the **https** launch profile and press F5.
+1. Configure your MySQL password with User Secrets, then run `dotnet ef database update` if the database has not yet been created.
+2. Start the API in one terminal:
+
+   ```powershell
+   dotnet run --launch-profile https
+   ```
+
+3. Start the Angular SPA in a second terminal:
+
+   ```powershell
+   cd frontend
+   pnpm install
+   pnpm start
+   ```
 
 Expected local endpoints:
 
 | Service | Address |
 | --- | --- |
-| ProductVault UI | `https://localhost:7253` |
+| Angular UI | `http://localhost:4200` |
+| ProductVault API | `https://localhost:7253` |
+| Swagger (Development only) | `https://localhost:7253/swagger` |
 | Health check | `https://localhost:7253/health` |
 | Metrics (Development only) | `https://localhost:7253/metrics` |
 
@@ -43,7 +56,7 @@ docker compose -f docker-compose.monitoring.yml down --volumes
 
 | Symptom | Check / resolution |
 | --- | --- |
-| Visual Studio has no startup item | Open `ProductVault.sln`, not the folder or only the `.csproj` file. |
+| Angular page cannot call the API | Ensure the API is running on `https://localhost:7253`, then accept its local development certificate if the browser asks. |
 | `dotnet ef database update` cannot connect | Start MySQL on port 3306 and verify the User Secrets connection string. |
 | Prometheus target is DOWN | Restart ProductVault with **https** (not IIS Express), then check `https://localhost:7253/metrics` in the browser. |
 | Docker cannot start containers | Start Docker Desktop, then rerun the compose command. First-time image pulls can take several minutes. |
@@ -55,5 +68,6 @@ docker compose -f docker-compose.monitoring.yml down --volumes
 ```powershell
 dotnet build ProductVault.sln
 dotnet test ProductVault.sln
+cd frontend; pnpm run build
 docker compose -f docker-compose.monitoring.yml config
 ```

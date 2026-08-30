@@ -4,7 +4,7 @@
 
 ## Decision
 
-Build ProductVault as one ASP.NET Core application with clear MVC, service, domain, and infrastructure boundaries.
+Build ProductVault as one ASP.NET Core API with clear controller, service, domain, and infrastructure boundaries, consumed by a separate Angular SPA.
 
 ## Rationale
 

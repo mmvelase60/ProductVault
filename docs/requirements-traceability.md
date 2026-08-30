@@ -5,9 +5,9 @@ This matrix maps the assignment requirements to implementation evidence and veri
 | Requirement | Implementation evidence | Verification |
 | --- | --- | --- |
 | C#, .NET 8, ASP.NET Core | `ProductVault.csproj`, `Program.cs` | Build the solution. |
-| MVC/Razor UI | `Controllers/`, `Views/` | Run the application and navigate the UI. |
+| Angular/TypeScript UI | `frontend/` standalone Angular application | Run `pnpm start` and navigate the SPA. |
 | EF Core + MySQL | `ApplicationDbContext`, migrations, `appsettings.json` | Run `dotnet ef database update`. |
-| Registration and login | ASP.NET Core Identity in `Areas/Identity`, `Program.cs` | Register and sign in. |
+| Registration and login | `AuthController`, Identity, JWT bearer configuration | Register/sign in through Angular and inspect the protected API calls. |
 | Each user manages only own data | `OwnerId` on entities; ownership filters in controllers/API | Sign in as two accounts and try another record ID. |
 | Category view/add/edit | `CategoriesController`, `Views/Categories/` | Complete the category acceptance tests. |
 | `AAA999` category code | Data annotations and controller checks | Try valid `ACC001` and invalid `AC1001`. |
@@ -21,7 +21,7 @@ This matrix maps the assignment requirements to implementation evidence and veri
 | Clean layers / SOLID | Controllers, services, domain models, EF infrastructure | Review [architecture](architecture.md). |
 | Concurrency | `RowVersion` fields and edit handling | Submit a stale edit after a second update. |
 | Validation and exception handling | Data annotations, model state, guarded file/import workflows | Test invalid values and malformed imports. |
-| API protection | `[Authorize]` on API controllers | Call API unauthenticated and authenticated. |
+| API protection | JWT bearer authentication and `[Authorize]` on API controllers | Call API without/with a bearer token. |
 | Auditing | `AuditableEntity` fields set in controllers | Inspect created/updated records in MySQL. |
 | Unit tests | `tests/ProductVault.Tests` | Run `dotnet test ProductVault.sln`. |
 | ERD, setup, technical docs | `README.md`, `docs/` | Review [documentation index](index.md). |
