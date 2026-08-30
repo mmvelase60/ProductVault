@@ -2,7 +2,7 @@
 
 ## Authentication and authorization
 
-ProductVault uses ASP.NET Core Identity with secure application cookies. This is the appropriate authentication mechanism for the server-rendered Razor MVC application: the browser signs in once, then MVC screens and same-origin API requests use the authenticated session.
+ProductVault uses ASP.NET Core Identity for password hashing and account storage, then issues signed, time-limited JWT bearer tokens to the Angular SPA. Angular attaches the token only to API requests through a centralized HTTP interceptor.
 
 All catalogue controllers and API controllers use `[Authorize]`. The authenticated user ID is obtained from Identity and becomes the authoritative `OwnerId` for new records.
 
@@ -20,10 +20,11 @@ Every category/product query includes an `OwnerId == currentUserId` filter. This
 
 ## Request protection
 
-- State-changing MVC form actions use antiforgery validation.
-- Identity password hashing and cookie handling are provided by ASP.NET Core Identity.
+- The API validates JWT issuer, audience, signature, and expiry before protected endpoints run.
+- CORS permits only the local Angular development origin (`http://localhost:4200`).
+- Identity password hashing is provided by ASP.NET Core Identity; the JWT signing key is stored in User Secrets, never source control.
 - HTTPS redirection and HSTS are enabled outside Development.
-- API endpoints require a signed-in session. If an external SPA/mobile client is introduced, add a dedicated token/OAuth design instead of mixing ad-hoc JWT handling into this MVC application.
+- API endpoints require a valid bearer token. A production deployment should replace the local token issuer with a managed identity/OAuth provider and secure token storage strategy.
 
 ## Data integrity and concurrency
 
