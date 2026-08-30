@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductVault", "ProductVault.csproj", "{B5EB6588-3131-4D3A-8827-976FBE85F229}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductVault", "backend\ProductVault.csproj", "{B5EB6588-3131-4D3A-8827-976FBE85F229}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "backend", "backend", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductVault.Tests", "tests\ProductVault.Tests\ProductVault.Tests.csproj", "{10871D86-B5F1-4E37-BA1C-9224129C9034}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductVault.Tests", "backend\tests\ProductVault.Tests\ProductVault.Tests.csproj", "{10871D86-B5F1-4E37-BA1C-9224129C9034}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -48,6 +48,7 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{B5EB6588-3131-4D3A-8827-976FBE85F229} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{10871D86-B5F1-4E37-BA1C-9224129C9034} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 	EndGlobalSection
 EndGlobal

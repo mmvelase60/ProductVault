@@ -41,6 +41,20 @@ jobs:
       - name: Run tests
         run: dotnet test ProductVault.sln --configuration ${{ env.BUILD_CONFIGURATION }} --no-build --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage" --results-directory TestResults
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Enable pnpm
+        run: corepack enable
+
+      - name: Restore Angular dependencies
+        run: pnpm --dir frontend install --frozen-lockfile
+
+      - name: Build Angular SPA
+        run: pnpm --dir frontend run build
+
       - name: Upload test results
         if: ${{ always() }}
         uses: actions/upload-artifact@v4
@@ -66,10 +80,10 @@ jobs:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Restore dependencies
-        run: dotnet restore ProductVault.csproj
+        run: dotnet restore backend/ProductVault.csproj
 
       - name: Publish application
-        run: dotnet publish ProductVault.csproj --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore --output ./publish
+        run: dotnet publish backend/ProductVault.csproj --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore --output ./publish
 
       - name: Upload deployment package
         uses: actions/upload-artifact@v4

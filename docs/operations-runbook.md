@@ -2,10 +2,11 @@
 
 ## Start the application
 
-1. Configure your MySQL password with User Secrets, then run `dotnet ef database update` if the database has not yet been created.
+1. Configure your MySQL password with User Secrets using `backend/ProductVault.csproj`, then run `dotnet ef database update` from the `backend` folder if the database has not yet been created.
 2. Start the API in one terminal:
 
    ```powershell
+   cd backend
    dotnet run --launch-profile https
    ```
 

@@ -21,12 +21,15 @@ Every product and category belongs to its authenticated owner. The API enforces 
 ## Repository layout
 
 ```text
-ProductVault/                 # ASP.NET Core Web API backend
-├── Controllers/Api/          # JWT, dashboard, category, and product endpoints
-├── Data/                     # EF Core context and MySQL migrations
-├── Services/                 # Product-code and Excel business services
+ProductVault/
+├── backend/                  # ASP.NET Core Web API
+│   ├── Controllers/Api/       # JWT, dashboard, category, and product endpoints
+│   ├── Data/                  # EF Core context and MySQL migrations
+│   ├── Services/              # Product-code and Excel business services
+│   └── tests/                 # xUnit business-rule tests
 ├── frontend/                 # Angular SPA
-└── tests/ProductVault.Tests/ # xUnit business-rule tests
+├── docs/                     # Architecture, API, testing, and operations notes
+└── Monitoring/               # Local Prometheus and Grafana configuration
 ```
 
 ## Run locally
@@ -42,13 +45,14 @@ ProductVault/                 # ASP.NET Core Web API backend
 From the repository root, keep your MySQL password and JWT signing key outside Git:
 
 ```powershell
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=localhost;Port=3306;Database=productvault;User ID=root;Password=YOUR_MYSQL_PASSWORD;"
-dotnet user-secrets set "Jwt:Key" "a-long-random-secret-of-at-least-32-characters"
+dotnet user-secrets set --project backend/ProductVault.csproj "ConnectionStrings:DefaultConnection" "Server=localhost;Port=3306;Database=productvault;User ID=root;Password=YOUR_MYSQL_PASSWORD;"
+dotnet user-secrets set --project backend/ProductVault.csproj "Jwt:Key" "a-long-random-secret-of-at-least-32-characters"
 ```
 
 ### 3. Create the MySQL schema and start the API
 
 ```powershell
+cd backend
 dotnet ef database update
 dotnet run --launch-profile https
 ```
