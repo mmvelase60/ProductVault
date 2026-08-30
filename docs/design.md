@@ -48,3 +48,7 @@ flowchart LR
     Products --> Image[Upload product image]
     Products --> Metrics[Generate monitoring activity]
 ```
+
+## Responsive design
+
+The Angular UI uses fluid page spacing and typography, a mobile navigation menu, and 44px minimum interactive targets. Dashboard metrics collapse from three columns to one on smaller screens; filters and forms reflow into single-column controls; and catalogue tables retain every column through touch-friendly horizontal scrolling instead of hiding actions or data.

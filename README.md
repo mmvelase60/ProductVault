@@ -14,6 +14,7 @@ Every product and category belongs to its authenticated owner. The API enforces 
 
 - JWT registration and sign-in for the Angular SPA.
 - Category create/edit with per-user `ABC123` code validation.
+- Responsive Angular UI with an accessible mobile navigation, touch-friendly controls, and scroll-safe catalogue tables.
 - Product CRUD, 10-item paging, searching, category filtering, sorting, and optimistic concurrency.
 - Product image upload plus Excel import (up to 500 records) and export.
 - MySQL-backed auditing, health checks, Prometheus metrics, Grafana dashboard, xUnit tests, and GitHub Actions CI.
