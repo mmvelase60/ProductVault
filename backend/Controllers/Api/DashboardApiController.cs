@@ -43,30 +43,33 @@ public class DashboardApiController(ApplicationDbContext db, UserManager<Identit
             new Category { Name = "Home office", CategoryCode = "HOM303", IsActive = true, OwnerId = UserId, CreatedBy = UserId, CreatedDate = now }
         };
 
-        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
-        db.Categories.AddRange(categories);
-        await db.SaveChangesAsync();
-
-        var products = new[]
+        await db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
         {
-            new Product { Name = "Wireless keyboard", Description = "Compact Bluetooth keyboard for everyday work.", Price = 899.99m, CategoryId = categories[1].CategoryId, OwnerId = UserId, CreatedBy = UserId, CreatedDate = now },
-            new Product { Name = "USB-C hub", Description = "Seven-port hub with HDMI and Ethernet.", Price = 649.50m, CategoryId = categories[1].CategoryId, OwnerId = UserId, CreatedBy = UserId, CreatedDate = now },
-            new Product { Name = "Ergonomic mouse", Description = "Comfortable wireless mouse with adjustable DPI.", Price = 459.00m, CategoryId = categories[1].CategoryId, OwnerId = UserId, CreatedBy = UserId, CreatedDate = now },
-            new Product { Name = "A4 printer paper", Description = "500-sheet ream of bright white copy paper.", Price = 129.99m, CategoryId = categories[0].CategoryId, OwnerId = UserId, CreatedBy = UserId, CreatedDate = now },
-            new Product { Name = "Desk organiser", Description = "Bamboo organiser for a tidy home-office desk.", Price = 249.00m, CategoryId = categories[2].CategoryId, OwnerId = UserId, CreatedBy = UserId, CreatedDate = now }
-        };
-
-        foreach (var product in products)
-        {
-            product.ProductCode = await codes.NextAsync(now);
-            db.Products.Add(product);
+            await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+            db.Categories.AddRange(categories);
             await db.SaveChangesAsync();
-        }
 
-        await transaction.CommitAsync();
+            var products = new[]
+            {
+                new Product { Name = "Wireless keyboard", Description = "Compact Bluetooth keyboard for everyday work.", Price = 899.99m, CategoryId = categories[1].CategoryId, OwnerId = UserId, CreatedBy = UserId, CreatedDate = now },
+                new Product { Name = "USB-C hub", Description = "Seven-port hub with HDMI and Ethernet.", Price = 649.50m, CategoryId = categories[1].CategoryId, OwnerId = UserId, CreatedBy = UserId, CreatedDate = now },
+                new Product { Name = "Ergonomic mouse", Description = "Comfortable wireless mouse with adjustable DPI.", Price = 459.00m, CategoryId = categories[1].CategoryId, OwnerId = UserId, CreatedBy = UserId, CreatedDate = now },
+                new Product { Name = "A4 printer paper", Description = "500-sheet ream of bright white copy paper.", Price = 129.99m, CategoryId = categories[0].CategoryId, OwnerId = UserId, CreatedBy = UserId, CreatedDate = now },
+                new Product { Name = "Desk organiser", Description = "Bamboo organiser for a tidy home-office desk.", Price = 249.00m, CategoryId = categories[2].CategoryId, OwnerId = UserId, CreatedBy = UserId, CreatedDate = now }
+            };
+
+            foreach (var product in products)
+            {
+                product.ProductCode = await codes.NextAsync(now);
+                db.Products.Add(product);
+                await db.SaveChangesAsync();
+            }
+
+            await transaction.CommitAsync();
+        });
         ProductVaultMetrics.CategoriesCreated.Inc(categories.Length);
-        ProductVaultMetrics.ProductsCreated.Inc(products.Length);
-        return Ok(new { message = "Demo data loaded.", categories = categories.Length, products = products.Length });
+        ProductVaultMetrics.ProductsCreated.Inc(5);
+        return Ok(new { message = "Demo data loaded.", categories = categories.Length, products = 5 });
     }
 }
 

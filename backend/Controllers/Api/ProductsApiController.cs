@@ -40,11 +40,17 @@ public class ProductsApiController(ApplicationDbContext db, UserManager<Identity
     {
         if (string.IsNullOrWhiteSpace(request.Name) || request.Price <= 0) return BadRequest(new { errors = new { product = "Name is required and price must be greater than zero." } });
         var category = await db.Categories.SingleOrDefaultAsync(c => c.CategoryId == request.CategoryId && c.OwnerId == UserId && c.IsActive); if (category is null) return BadRequest(new { errors = new { categoryId = "Choose an active category you own." } });
-        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
-        var product = new Product { Name = request.Name.Trim(), Description = request.Description?.Trim(), Price = request.Price, CategoryId = category.CategoryId, ProductCode = await codes.NextAsync(DateTime.UtcNow), OwnerId = UserId, CreatedBy = UserId, CreatedDate = DateTime.UtcNow };
-        db.Products.Add(product); await db.SaveChangesAsync(); await transaction.CommitAsync();
+        Product? product = null;
+        await db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
+        {
+            await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+            product = new Product { Name = request.Name.Trim(), Description = request.Description?.Trim(), Price = request.Price, CategoryId = category.CategoryId, ProductCode = await codes.NextAsync(DateTime.UtcNow), OwnerId = UserId, CreatedBy = UserId, CreatedDate = DateTime.UtcNow };
+            db.Products.Add(product);
+            await db.SaveChangesAsync();
+            await transaction.CommitAsync();
+        });
         ProductVaultMetrics.ProductsCreated.Inc();
-        return CreatedAtAction(nameof(Get), new ProductResponse(product.ProductId, product.ProductCode, product.Name, product.Description, product.Price, category.CategoryId, category.Name, product.ImagePath, Convert.ToBase64String(product.RowVersion)));
+        return CreatedAtAction(nameof(Get), new ProductResponse(product!.ProductId, product.ProductCode, product.Name, product.Description, product.Price, category.CategoryId, category.Name, product.ImagePath, Convert.ToBase64String(product.RowVersion)));
     }
 
     [HttpPut("{id:int}")]
