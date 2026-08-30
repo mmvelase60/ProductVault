@@ -8,6 +8,7 @@ This matrix maps the assignment requirements to implementation evidence and veri
 | Angular/TypeScript UI | `frontend/` standalone Angular application | Run `pnpm start` and navigate the SPA. |
 | EF Core + MySQL | `ApplicationDbContext`, migrations, `appsettings.json` | Run `dotnet ef database update`. |
 | Registration and login | `AuthController`, Identity, JWT bearer configuration | Register/sign in through Angular and inspect the protected API calls. |
+| Demonstrable starting catalogue | `DashboardApiController` demo-data endpoint and Angular dashboard action | With a fresh account, load 3 categories and 5 products, then verify the dashboard totals. |
 | Each user manages only own data | `OwnerId` on entities; ownership filters in controllers/API | Sign in as two accounts and try another record ID. |
 | Category view/add/edit | Angular categories screen and `CategoriesApiController` | Complete the category acceptance tests. |
 | `AAA999` category code | Data annotations and controller checks | Try valid `ACC001` and invalid `AC1001`. |

@@ -11,4 +11,5 @@
 - [Local operations runbook](operations-runbook.md)
 - [Architecture Decision Records](adr/README.md)
 - [Feature roadmap](roadmap.md)
-- [Local Prometheus and Grafana monitoring](../README.md#local-monitoring-with-prometheus-and-grafana)
+- [Interview walkthrough](interview-walkthrough.md)
+- [Local Prometheus and Grafana monitoring](operations-runbook.md#start-monitoring)

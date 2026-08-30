@@ -22,7 +22,7 @@ Expected local endpoints:
 
 | Service | Address |
 | --- | --- |
-| Angular UI | `http://localhost:4200` |
+| Angular UI | The URL printed by `pnpm start` (normally `http://localhost:4200`; Angular may choose another port if it is busy). |
 | ProductVault API | `https://localhost:7253` |
 | Swagger (Development only) | `https://localhost:7253/swagger` |
 | Health check | `https://localhost:7253/health` |
@@ -63,6 +63,7 @@ docker compose -f docker-compose.monitoring.yml down --volumes
 | Docker cannot start containers | Start Docker Desktop, then rerun the compose command. First-time image pulls can take several minutes. |
 | Grafana dashboard is missing | Restart the stack. Check that the `Monitoring/Grafana` folders remain mounted and unmodified. |
 | Port already in use | Stop the conflicting local service or update the relevant port in `launchSettings.json`/`docker-compose.monitoring.yml`. |
+| **Load demo data** returns a conflict | The current account already has categories or products. Use a new account or manually clear that account's data; sample data intentionally cannot be duplicated. |
 
 ## Routine developer checks
 

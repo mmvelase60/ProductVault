@@ -34,4 +34,5 @@ flowchart TB
 - **Ownership at query level:** every data read and mutation filters by the authenticated `OwnerId`.
 - **Optimistic concurrency:** MySQL timestamp-backed concurrency tokens detect conflicting product/category edits.
 - **Database constraints as safeguards:** indexes protect category-code and product-code uniqueness even if application logic is bypassed.
+- **Retry-safe writes:** serializable product and import transactions execute through EF Core's MySQL retry strategy, so transient database failures do not bypass the write workflow.
 - **Local-first monitoring:** `/metrics` is only mapped in Development; Grafana and Prometheus run through Docker Compose.
