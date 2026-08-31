@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Prometheus;
 using ProductVault.Data;
+using ProductVault.Services;
 using System.Text;
 
 namespace ProductVault;
@@ -23,6 +24,7 @@ public class Program
         builder.Services.AddIdentityCore<IdentityUser>(options =>
         {
             options.SignIn.RequireConfirmedAccount = false;
+            options.SignIn.RequireConfirmedEmail = true;
             options.Password.RequiredLength = 8;
             options.Password.RequireNonAlphanumeric = false;
             options.Password.RequireUppercase = false;
@@ -73,6 +75,8 @@ public class Program
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddScoped<IProductCodeGenerator, ProductCodeGenerator>();
         builder.Services.AddScoped<IExcelProductService, ExcelProductService>();
+        builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection(EmailOptions.SectionName));
+        builder.Services.AddScoped<IApplicationEmailSender, SmtpEmailSender>();
 
         var app = builder.Build();
 

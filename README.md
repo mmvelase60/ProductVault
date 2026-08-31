@@ -12,7 +12,7 @@ Every product and category belongs to its authenticated owner. The API enforces 
 
 ## Features
 
-- JWT registration and sign-in for the Angular SPA.
+- Email-confirmed registration, password recovery, and JWT sign-in for the Angular SPA.
 - Category create/edit with per-user `ABC123` code validation.
 - Responsive Angular UI with an accessible mobile navigation, touch-friendly controls, and scroll-safe catalogue tables.
 - Product CRUD, 10-item paging, searching, category filtering, sorting, and optimistic concurrency.
@@ -50,6 +50,19 @@ dotnet user-secrets set --project backend/ProductVault.csproj "ConnectionStrings
 dotnet user-secrets set --project backend/ProductVault.csproj "Jwt:Key" "a-long-random-secret-of-at-least-32-characters"
 ```
 
+### Optional but recommended: Gmail email delivery
+
+Email confirmation and password-reset links use Gmail SMTP. Enable two-step verification on a dedicated Gmail account, create a Gmail **App Password**, then store it locally (never in Git):
+
+```powershell
+dotnet user-secrets set --project backend/ProductVault.csproj "Email:Username" "YOUR_GMAIL_ADDRESS"
+dotnet user-secrets set --project backend/ProductVault.csproj "Email:Password" "YOUR_16_CHARACTER_GMAIL_APP_PASSWORD"
+dotnet user-secrets set --project backend/ProductVault.csproj "Email:FromAddress" "YOUR_GMAIL_ADDRESS"
+dotnet user-secrets set --project backend/ProductVault.csproj "Email:FrontendBaseUrl" "http://localhost:4200"
+```
+
+If Angular starts on another port, use that exact URL for `Email:FrontendBaseUrl`. The SMTP host (`smtp.gmail.com`) and TLS port (`587`) are already set in `appsettings.json`.
+
 ### 3. Create the MySQL schema and start the API
 
 ```powershell
@@ -74,7 +87,7 @@ Open the localhost URL printed by Angular (normally `http://localhost:4200`), re
 
 ## API authentication
 
-`POST /api/auth/register` and `POST /api/auth/login` return an eight-hour JWT access token. Angular stores the active session locally and its interceptor sends:
+Registration creates an unconfirmed account and sends a time-limited confirmation link. Confirmed users can sign in with an eight-hour JWT access token. Angular stores the active session locally and its interceptor sends:
 
 ```text
 Authorization: Bearer <access-token>

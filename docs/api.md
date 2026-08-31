@@ -13,14 +13,18 @@ Swagger is available at `/swagger` while the API runs in Development. Every prot
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| POST | `/auth/register` | Register an Identity user and receive a JWT. |
-| POST | `/auth/login` | Validate credentials and receive a JWT. |
+| POST | `/auth/register` | Register an Identity user and send a confirmation email. |
+| POST | `/auth/login` | Validate confirmed credentials and receive a JWT. |
+| POST | `/auth/confirm-email` | Confirm an email address using the user ID and token from the email link. |
+| POST | `/auth/resend-confirmation` | Request another confirmation email. |
+| POST | `/auth/forgot-password` | Request a password-reset email. |
+| POST | `/auth/reset-password` | Reset a password using the user ID and token from the email link. |
 
 ```json
 { "email": "user@example.com", "password": "Password1" }
 ```
 
-The response contains `accessToken`, `expiresAt`, and `email`.
+Registration returns `202 Accepted` after sending the confirmation email. Login returns `accessToken`, `expiresAt`, and `email` only after the email is confirmed. Password-recovery and resend endpoints return a generic success message so callers cannot use them to enumerate accounts.
 
 ## Dashboard
 
