@@ -3,7 +3,6 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
-using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -20,6 +19,8 @@ public class AuthController(
     IConfiguration configuration,
     IApplicationEmailSender emailSender,
     IEmailVerificationCodeService verificationCodes,
+    IUsernameGenerator usernameGenerator,
+    RoleBootstrapper roleBootstrapper,
     IOptions<EmailOptions> emailOptions,
     ILogger<AuthController> logger) : ControllerBase
 {
@@ -32,7 +33,7 @@ public class AuthController(
             return BadRequest(new { errors = new { Name = "First name and surname must contain letters or numbers." } });
 
         var email = request.Email.Trim();
-        var username = await CreateUniqueUsernameAsync(firstName, surname);
+        var username = await usernameGenerator.NextAsync(firstName, surname);
         var user = new ApplicationUser
         {
             FirstName = firstName,
@@ -43,6 +44,10 @@ public class AuthController(
         var result = await users.CreateAsync(user, request.Password);
         if (!result.Succeeded)
             return BadRequest(new { errors = result.Errors.ToDictionary(error => error.Code, error => error.Description) });
+
+        await users.AddToRoleAsync(user, RoleBootstrapper.UserRole);
+        if (roleBootstrapper.IsConfiguredAdmin(email))
+            await users.AddToRoleAsync(user, RoleBootstrapper.AdminRole);
 
         try
         {
@@ -68,7 +73,7 @@ public class AuthController(
             return StatusCode(StatusCodes.Status403Forbidden,
                 new MessageResponse("Verify your email address before signing in.", "email_confirmation_required"));
 
-        return Ok(CreateResponse(user));
+        return Ok(await CreateResponseAsync(user));
     }
 
     [HttpPost("verify-email-code")]
@@ -183,10 +188,11 @@ public class AuthController(
         return $"{baseUrl}/{path}?userId={Uri.EscapeDataString(userId)}&token={Uri.EscapeDataString(token)}";
     }
 
-    private AuthResponse CreateResponse(ApplicationUser user)
+    private async Task<AuthResponse> CreateResponseAsync(ApplicationUser user)
     {
         var expiresAt = DateTime.UtcNow.AddHours(8);
-        var claims = new[]
+        var roles = await users.GetRolesAsync(user);
+        var claims = new List<Claim>
         {
             new Claim(JwtRegisteredClaimNames.Sub, user.Id),
             new Claim(ClaimTypes.NameIdentifier, user.Id),
@@ -194,24 +200,11 @@ public class AuthController(
             new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
+        claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]!));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         var token = new JwtSecurityToken(configuration["Jwt:Issuer"], configuration["Jwt:Audience"], claims, expires: expiresAt, signingCredentials: credentials);
-        return new AuthResponse(new JwtSecurityTokenHandler().WriteToken(token), expiresAt, user.Email ?? string.Empty);
-    }
-
-    private async Task<string> CreateUniqueUsernameAsync(string firstName, string surname)
-    {
-        var initial = char.ToUpperInvariant(firstName.First(char.IsLetterOrDigit));
-        var cleanedSurname = Regex.Replace(surname, @"[^\p{L}\p{Nd}]", string.Empty);
-        var baseUsername = $"{initial}{cleanedSurname}";
-
-        for (var suffix = 1; ; suffix++)
-        {
-            var candidate = suffix == 1 ? baseUsername : $"{baseUsername}{suffix}";
-            if (await users.FindByNameAsync(candidate) is null)
-                return candidate;
-        }
+        return new AuthResponse(new JwtSecurityTokenHandler().WriteToken(token), expiresAt, user.Email ?? string.Empty, roles.ToArray());
     }
 }
 
@@ -225,4 +218,4 @@ public sealed record EmailRequest([Required, EmailAddress] string Email);
 public sealed record VerifyEmailCodeRequest([Required, EmailAddress] string Email, [Required, RegularExpression("^[0-9]{6}$")] string Code);
 public sealed record ResetPasswordRequest([Required] string UserId, [Required] string Token, [Required, MinLength(8)] string Password);
 public sealed record MessageResponse(string Message, string? Code = null);
-public sealed record AuthResponse(string AccessToken, DateTime ExpiresAt, string Email);
+public sealed record AuthResponse(string AccessToken, DateTime ExpiresAt, string Email, IReadOnlyList<string> Roles);

@@ -11,4 +11,4 @@ public interface IExcelProductService
 }
 
 public sealed record ExcelProductRow(string Name, string? Description, string CategoryCode, decimal Price);
-public sealed record CatalogueImportRow(string CategoryName, string CategoryCode, bool CategoryActive, string ProductName, string? Description, decimal Price);
+public sealed record CatalogueImportRow(int RowNumber, string CategoryName, string CategoryCode, bool CategoryActive, bool HasValidCategoryActive, string ProductName, string? Description, decimal Price, bool HasValidPrice, int QuantityInStock, bool HasValidQuantity, int ReorderLevel, bool HasValidReorderLevel);

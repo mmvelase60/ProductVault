@@ -5,11 +5,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProductVault.Data;
 using ProductVault.Monitoring;
+using ProductVault.Services;
 
 namespace ProductVault.Controllers.Api;
 
 [ApiController, Authorize, Route("api/categories")]
-public class CategoriesApiController(ApplicationDbContext db, UserManager<ApplicationUser> users) : ControllerBase
+public class CategoriesApiController(ApplicationDbContext db, UserManager<ApplicationUser> users, IAuditTrailService audit) : ControllerBase
 {
     private string UserId => users.GetUserId(User)!;
 
@@ -27,6 +28,8 @@ public class CategoriesApiController(ApplicationDbContext db, UserManager<Applic
         if (await db.Categories.AnyAsync(c => c.OwnerId == UserId && c.CategoryCode == code)) return Conflict(new { message = "This category code is already in use." });
         var category = new Category { Name = request.Name.Trim(), CategoryCode = code, IsActive = request.IsActive, OwnerId = UserId, CreatedBy = UserId, CreatedDate = DateTime.UtcNow };
         db.Categories.Add(category); await db.SaveChangesAsync();
+        audit.Record(UserId, UserId, "Created", "Category", category.CategoryId.ToString(), category.Name);
+        await db.SaveChangesAsync();
         ProductVaultMetrics.CategoriesCreated.Inc();
         return CreatedAtAction(nameof(Get), new CategoryResponse(category.CategoryId, category.Name, category.CategoryCode, category.IsActive, 0, Convert.ToBase64String(category.RowVersion)));
     }
@@ -45,6 +48,7 @@ public class CategoriesApiController(ApplicationDbContext db, UserManager<Applic
         {
             category.Name = request.Name.Trim(); category.CategoryCode = code; category.IsActive = request.IsActive; category.UpdatedBy = UserId; category.UpdatedDate = DateTime.UtcNow;
             db.Entry(category).Property(item => item.RowVersion).OriginalValue = Convert.FromBase64String(request.RowVersion);
+            audit.Record(UserId, UserId, "Updated", "Category", category.CategoryId.ToString(), category.Name, request.IsActive ? "Active" : "Inactive");
             await db.SaveChangesAsync();
             return NoContent();
         }

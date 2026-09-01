@@ -10,6 +10,8 @@ import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { CategoriesComponent } from './features/categories/categories.component';
 import { ProductsComponent } from './features/products/products.component';
 import { CatalogueImportComponent } from './features/catalogue-import/catalogue-import.component';
+import { ProfileComponent } from './features/profile/profile.component';
+import { AdminComponent } from './features/admin/admin.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -22,6 +24,8 @@ export const routes: Routes = [
   { path: 'categories', component: CategoriesComponent, canActivate: [authGuard] },
   { path: 'products', component: ProductsComponent, canActivate: [authGuard] },
   { path: 'catalogue-import', component: CatalogueImportComponent, canActivate: [authGuard] },
+  { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
+  { path: 'admin', component: AdminComponent, canActivate: [authGuard] },
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
   { path: '**', redirectTo: 'dashboard' }
 ];

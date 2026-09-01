@@ -21,6 +21,14 @@ public class Product : AuditableEntity
     [Column(TypeName = "decimal(18,2)")]
     public decimal Price { get; set; }
 
+    [Range(0, int.MaxValue)]
+    [Display(Name = "Quantity in stock")]
+    public int QuantityInStock { get; set; }
+
+    [Range(0, int.MaxValue)]
+    [Display(Name = "Reorder level")]
+    public int ReorderLevel { get; set; }
+
     public string? ImagePath { get; set; }
     public int CategoryId { get; set; }
     public Category? Category { get; set; }

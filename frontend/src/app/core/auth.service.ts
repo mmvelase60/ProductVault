@@ -54,8 +54,9 @@ export class AuthService {
     const value = localStorage.getItem(storageKey);
     if (!value) return null;
     try {
-      const session = JSON.parse(value) as AuthResponse;
-      return new Date(session.expiresAt) > new Date() ? session : null;
+      const session = JSON.parse(value) as Partial<AuthResponse>;
+      if (!session.accessToken || !session.expiresAt || new Date(session.expiresAt) <= new Date()) return null;
+      return { accessToken: session.accessToken, expiresAt: session.expiresAt, email: session.email ?? '', roles: Array.isArray(session.roles) ? session.roles : [] };
     } catch {
       return null;
     }

@@ -1,4 +1,4 @@
-import { CurrencyPipe, NgFor, NgIf } from '@angular/common';
+import { CurrencyPipe, DatePipe, NgFor, NgIf } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api.service';
@@ -6,7 +6,7 @@ import { Dashboard } from '../../core/models';
 
 @Component({
   selector: 'pv-dashboard',
-  imports: [NgIf, NgFor, CurrencyPipe, RouterLink],
+  imports: [NgIf, NgFor, CurrencyPipe, DatePipe, RouterLink],
   template: `
     <section class="heading">
       <div>
@@ -28,6 +28,7 @@ import { Dashboard } from '../../core/models';
         <article><span>Products</span><strong>{{ data.productCount }}</strong><small>Your private catalogue</small></article>
         <article><span>Active categories</span><strong>{{ data.activeCategoryCount }}</strong><small>of {{ data.totalCategoryCount }} total</small></article>
         <article><span>Catalogue value</span><strong>{{ data.catalogueValue | currency:'ZAR':'symbol-narrow' }}</strong><small>Based on current prices</small></article>
+        <article><span>Low stock</span><strong>{{ data.lowStockCount }}</strong><small><a routerLink="/products">Review stock levels</a></small></article>
       </section>
 
       <section class="card">
@@ -40,6 +41,14 @@ import { Dashboard } from '../../core/models';
           </a>
         </div>
         <ng-template #empty><div class="empty"><h3>Your catalogue is ready.</h3><p>Create a category, then add your first product.</p><a class="button" routerLink="/categories">Create a category</a></div></ng-template>
+      </section>
+
+      <section class="card activity-card">
+        <div class="card-title"><div><h2>Recent activity</h2><p>Changes recorded in this workspace.</p></div></div>
+        <div class="activity" *ngIf="data.activity.length; else noActivity">
+          <div *ngFor="let event of data.activity"><span class="avatar" aria-hidden="true">{{ event.action.charAt(0) }}</span><span><strong>{{ event.action }} {{ event.entityType.toLowerCase() }}</strong><small>{{ event.entityName }}{{ event.detail ? ' · ' + event.detail : '' }}</small></span><time>{{ event.occurredAt | date:'medium' }}</time></div>
+        </div>
+        <ng-template #noActivity><div class="empty compact-empty"><h3>No activity yet</h3><p>Your recent catalogue changes will appear here.</p></div></ng-template>
       </section>
     </ng-container>
 

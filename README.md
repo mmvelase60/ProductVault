@@ -15,9 +15,9 @@ Every product and category belongs to its authenticated owner. The API enforces 
 - One-time email-code verification, password recovery, and JWT sign-in for the Angular SPA.
 - Category create/edit with per-user `ABC123` code validation.
 - Responsive Angular UI with an accessible mobile navigation, touch-friendly controls, and scroll-safe catalogue tables.
-- Product CRUD, 10-item paging, searching, category filtering, sorting, optimistic concurrency, and a CSV/Excel catalogue import centre.
+- Product CRUD, stock and reorder thresholds, low-stock filtering, 10-item paging, searching, category filtering, sorting, optimistic concurrency, and a CSV/Excel catalogue import centre.
 - Product image upload plus Excel import (up to 500 records) and export.
-- MySQL-backed auditing, health checks, Prometheus metrics, Grafana dashboard, xUnit tests, and GitHub Actions CI.
+- Profile management, `User`/`Admin` Identity roles, MySQL-backed audit history, health checks, Prometheus metrics, Grafana dashboard, xUnit tests, and GitHub Actions CI.
 
 ## Repository layout
 
@@ -59,9 +59,12 @@ dotnet user-secrets set --project backend/ProductVault.csproj "Email:Username" "
 dotnet user-secrets set --project backend/ProductVault.csproj "Email:Password" "YOUR_16_CHARACTER_GMAIL_APP_PASSWORD"
 dotnet user-secrets set --project backend/ProductVault.csproj "Email:FromAddress" "YOUR_GMAIL_ADDRESS"
 dotnet user-secrets set --project backend/ProductVault.csproj "Email:FrontendBaseUrl" "http://localhost:4200"
+dotnet user-secrets set --project backend/ProductVault.csproj "Admin:Email" "YOUR_ADMIN_EMAIL_ADDRESS"
 ```
 
 If Angular starts on another port, use that exact URL for `Email:FrontendBaseUrl`. The SMTP host (`smtp.gmail.com`) and TLS port (`587`) are already set in `appsettings.json`.
+
+`Admin:Email` is optional. When it matches a registered account, ProductVault assigns that account the `Admin` role at startup; all other registrations receive the `User` role. Keep this setting in User Secrets.
 
 ### 3. Create the MySQL schema and start the API
 

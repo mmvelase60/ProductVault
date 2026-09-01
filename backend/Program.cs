@@ -12,7 +12,7 @@ namespace ProductVault;
 
 public class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
 
@@ -30,6 +30,7 @@ public class Program
             options.Password.RequireNonAlphanumeric = false;
             options.Password.RequireUppercase = false;
         })
+            .AddRoles<IdentityRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddSignInManager()
             .AddDefaultTokenProviders();
@@ -75,12 +76,18 @@ public class Program
         builder.Services.AddHealthChecks();
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddScoped<IProductCodeGenerator, ProductCodeGenerator>();
+        builder.Services.AddScoped<IUsernameGenerator, UsernameGenerator>();
+        builder.Services.AddScoped<IAuditTrailService, AuditTrailService>();
         builder.Services.AddScoped<IExcelProductService, ExcelProductService>();
         builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection(EmailOptions.SectionName));
         builder.Services.AddScoped<IApplicationEmailSender, SmtpEmailSender>();
         builder.Services.AddScoped<IEmailVerificationCodeService, EmailVerificationCodeService>();
+        builder.Services.AddScoped<RoleBootstrapper>();
 
         var app = builder.Build();
+
+        using (var scope = app.Services.CreateScope())
+            await scope.ServiceProvider.GetRequiredService<RoleBootstrapper>().InitialiseAsync();
 
         // Configure the HTTP request pipeline.
         if (!app.Environment.IsDevelopment())

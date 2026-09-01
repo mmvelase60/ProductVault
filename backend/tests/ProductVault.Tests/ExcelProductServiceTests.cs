@@ -19,6 +19,22 @@ public class ExcelProductServiceTests
         Assert.Equal(249.99m, row.Price);
     }
 
+    [Fact]
+    public void ReadCatalogue_preserves_invalid_row_values_for_an_error_report()
+    {
+        const string csv = "Category Name,Category Code,Category Active,Product Name,Description,Price,Quantity In Stock,Reorder Level\nTechnology,TEC202,true,Keyboard,Mechanical,bad-price,-1,5\n";
+        var bytes = System.Text.Encoding.UTF8.GetBytes(csv);
+        var file = new FormFile(new MemoryStream(bytes), 0, bytes.Length, "file", "catalogue.csv");
+
+        var row = Assert.Single(new ExcelProductService().ReadCatalogue(file));
+
+        Assert.Equal(2, row.RowNumber);
+        Assert.False(row.HasValidPrice);
+        Assert.Equal(-1, row.QuantityInStock);
+        Assert.True(row.HasValidQuantity);
+        Assert.True(row.HasValidReorderLevel);
+    }
+
     private static byte[] CreateWorkbook()
     {
         using var workbook = new XLWorkbook();

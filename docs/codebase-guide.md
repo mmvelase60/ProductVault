@@ -30,7 +30,7 @@ The Angular application is in `frontend/src/app`. It uses standalone components 
 | Application shell | `app.component.ts` | Renders the navigation bar, switches it for signed-in and guest users, supports mobile navigation, and signs a user out before routing to the sign-in page. |
 | Application setup | `app.config.ts`, `app.routes.ts` | Registers Angular services, the HTTP interceptor, and routes. Routes requiring a session are protected by the route guard. |
 | API configuration | `core/api.config.ts` | Holds the API base URL so the frontend does not hard-code endpoint locations throughout the UI. |
-| Authentication state | `core/auth.service.ts` | Registers and signs in users, verifies email codes, requests password resets, stores the JWT session locally, and exposes the current authentication state. |
+| Authentication state | `core/auth.service.ts` | Registers and signs in users, verifies email codes, requests password resets, stores the JWT session locally, and exposes the current authentication state and roles. |
 | HTTP security | `core/auth.interceptor.ts` | Adds the bearer token to authenticated API requests. Components do not need to repeat this security work. |
 | Route protection | `core/auth.guard.ts` | Prevents unauthenticated users from opening dashboard, product, category, or import pages. |
 | Catalogue API client | `core/api.service.ts` | Provides typed HTTP methods for dashboard, categories, products, downloads, and catalogue imports. |
@@ -40,6 +40,7 @@ The Angular application is in `frontend/src/app`. It uses standalone components 
 | Categories | `features/categories/categories.component.ts` | Lists, creates, edits, and deactivates the current user's categories. |
 | Products | `features/products/products.component.ts` | Lists, filters, creates, edits, deletes, exports, and imports product data. |
 | Import centre | `features/catalogue-import/catalogue-import.component.ts` | Gives users a guided CSV/XLSX import flow, a template download, and a clearly separated placeholder for a future provider integration. |
+| Profile and admin pages | `features/profile/*`, `features/admin/*` | Let a user update their profile and password, and expose a role-protected account directory to the configured administrator. |
 | Shared presentation | `styles.scss` and component styles | Provides responsive layout, accessible controls, focus states, and visual consistency across desktop and mobile sizes. |
 
 ### How a frontend component calls the backend
@@ -62,6 +63,7 @@ The API lives in `backend`. `Program.cs` is the composition root: it wires toget
 | Application startup | `Program.cs` | Configures MySQL, EF Core retry handling, Identity, JWT authentication, authorization, CORS, dependency injection, health checks, Swagger, and development metrics. |
 | User model | `Models/ApplicationUser.cs` | Extends the ASP.NET Identity user with `FirstName` and `Surname`. The server generates a username such as `MMvelase`; email remains the sign-in address. |
 | Catalogue models | `Models/Category.cs`, `Models/Product.cs`, `Models/AuditableEntity.cs` | Define the category/product data shape, owner identity, audit values, active status, and concurrency information. |
+| Audit model | `Models/AuditEvent.cs` | Stores an immutable workspace activity record for catalogue, profile, and import actions. |
 | Data access | `Data/ApplicationDbContext.cs` | Defines the EF Core model, Identity integration, `Categories` and `Products` sets, indexes, constraints, relationships, and concurrency mappings. |
 | Database history | `Data/Migrations/*` | Versioned schema changes that create and evolve the MySQL database consistently. |
 | Authentication controller | `Controllers/Api/AuthController.cs` | Registers users, creates JWT sessions, verifies six-digit email codes, resends codes, and handles forgotten-password/reset-password requests. |
@@ -73,6 +75,8 @@ The API lives in `backend`. `Program.cs` is the composition root: it wires toget
 | Spreadsheet service | `Services/ExcelProductService.cs` | Reads the supported CSV/XLSX format into validated import rows. It is used by the import boundary rather than being embedded in a controller. |
 | Verification-code service | `Services/EmailVerificationCodeService.cs` | Creates cryptographically secure six-digit codes, stores only protected code values in Identity token storage, expires them after ten minutes, and limits incorrect attempts. |
 | Email sender | `Services/SmtpEmailSender.cs`, `Services/EmailOptions.cs` | Sends verification and reset messages through configured SMTP settings. In local development these settings can be supplied through .NET User Secrets instead of source control. |
+| Identity roles | `Services/RoleBootstrapper.cs`, `Controllers/Api/AdminApiController.cs` | Creates the `User` and `Admin` roles, assigns every registration a user role, optionally promotes the configured administrator, and protects admin-only APIs. |
+| Audit trail | `Services/AuditTrailService.cs` | Adds activity records alongside catalogue, profile, and import changes. |
 | Observability | `Monitoring/ProductVaultMetrics.cs` | Defines business and request metrics that Prometheus can collect during development. |
 
 ### Controller, service, and class responsibilities
@@ -107,7 +111,8 @@ This is a deliberate design choice, not a missing implementation. A dedicated re
 | --- | --- |
 | `AspNetUsers` and other `AspNet*` tables | Managed by ASP.NET Identity. Stores accounts, password hashes, confirmation state, token records, login metadata, and first/surname profile values. |
 | `categories` | Stores each user's catalogue categories, category codes, active state, audit data, and concurrency value. |
-| `products` | Stores products, prices, image references, category relationship, ownership, audit data, and concurrency value. |
+| `products` | Stores products, prices, stock quantity, reorder level, image references, category relationship, ownership, audit data, and concurrency value. |
+| `AuditEvents` | Stores owner-scoped history for catalogue, profile, import, and password-change actions. |
 | `__EFMigrationsHistory` | Records which EF Core migrations have been applied to the database. |
 
 The API gets the authenticated user ID from the JWT claims and filters catalogue queries by `OwnerId`. That is why one signed-in user cannot read or modify another user's products or categories merely by changing a browser URL or request ID.

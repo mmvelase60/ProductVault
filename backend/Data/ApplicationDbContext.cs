@@ -13,6 +13,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Product> Products => Set<Product>();
+    public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -38,6 +39,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             entity.HasIndex(x => new { x.OwnerId, x.CategoryId });
             entity.Property(x => x.Price).HasPrecision(18, 2);
             entity.Property(x => x.RowVersion).IsRowVersion();
+        });
+
+        builder.Entity<AuditEvent>(entity =>
+        {
+            entity.HasIndex(x => new { x.OwnerId, x.OccurredAt });
+            entity.Property(x => x.OccurredAt).HasPrecision(6);
         });
     }
 }

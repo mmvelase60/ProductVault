@@ -9,11 +9,11 @@ public sealed class ExcelProductService : IExcelProductService
     public byte[] Export(IEnumerable<Product> products)
     {
         using var workbook = new XLWorkbook(); var sheet = workbook.Worksheets.Add("Products");
-        var headers = new[] { "Product Code", "Name", "Description", "Category Code", "Category", "Price", "Created Date" };
+        var headers = new[] { "Product Code", "Name", "Description", "Category Code", "Category", "Price", "Quantity In Stock", "Reorder Level", "Created Date" };
         for (var i = 0; i < headers.Length; i++) sheet.Cell(1, i + 1).Value = headers[i];
         sheet.Row(1).Style.Font.Bold = true; var row = 2;
-        foreach (var p in products) { sheet.Cell(row, 1).Value = p.ProductCode; sheet.Cell(row, 2).Value = p.Name; sheet.Cell(row, 3).Value = p.Description; sheet.Cell(row, 4).Value = p.Category?.CategoryCode; sheet.Cell(row, 5).Value = p.Category?.Name; sheet.Cell(row, 6).Value = p.Price; sheet.Cell(row, 7).Value = p.CreatedDate; row++; }
-        sheet.Column(6).Style.NumberFormat.Format = "#,##0.00"; sheet.Column(7).Style.DateFormat.Format = "yyyy-mm-dd HH:mm"; sheet.Columns().AdjustToContents();
+        foreach (var p in products) { sheet.Cell(row, 1).Value = p.ProductCode; sheet.Cell(row, 2).Value = p.Name; sheet.Cell(row, 3).Value = p.Description; sheet.Cell(row, 4).Value = p.Category?.CategoryCode; sheet.Cell(row, 5).Value = p.Category?.Name; sheet.Cell(row, 6).Value = p.Price; sheet.Cell(row, 7).Value = p.QuantityInStock; sheet.Cell(row, 8).Value = p.ReorderLevel; sheet.Cell(row, 9).Value = p.CreatedDate; row++; }
+        sheet.Column(6).Style.NumberFormat.Format = "#,##0.00"; sheet.Column(9).Style.DateFormat.Format = "yyyy-mm-dd HH:mm"; sheet.Columns().AdjustToContents();
         using var stream = new MemoryStream(); workbook.SaveAs(stream); return stream.ToArray();
     }
 
@@ -38,7 +38,7 @@ public sealed class ExcelProductService : IExcelProductService
         {
             using var stream = file.OpenReadStream(); using var workbook = new XLWorkbook(stream);
             var sheet = workbook.Worksheets.FirstOrDefault() ?? throw new InvalidOperationException("The workbook contains no worksheet.");
-            return ReadCatalogueRows(sheet.RowsUsed().Select(row => Enumerable.Range(1, 6).Select(column => row.Cell(column).GetString()).ToArray()));
+            return ReadCatalogueRows(sheet.RowsUsed().Select(row => Enumerable.Range(1, 8).Select(column => row.Cell(column).GetString()).ToArray()));
         }
 
         if (extension == ".csv")
@@ -60,13 +60,21 @@ public sealed class ExcelProductService : IExcelProductService
             throw new InvalidOperationException("Use these columns: Category Name, Category Code, Category Active, Product Name, Description, Price.");
 
         var result = new List<CatalogueImportRow>();
-        foreach (var row in rows.Skip(1))
+        var hasStockColumns = rows[0].Length >= 8 && string.Equals(rows[0][6].Trim(), "Quantity In Stock", StringComparison.OrdinalIgnoreCase) && string.Equals(rows[0][7].Trim(), "Reorder Level", StringComparison.OrdinalIgnoreCase);
+        if (rows[0].Length > 6 && !hasStockColumns)
+            throw new InvalidOperationException("Optional stock columns must be named Quantity In Stock and Reorder Level.");
+
+        foreach (var (row, index) in rows.Skip(1).Select((row, index) => (row, index)))
         {
             if (row.All(string.IsNullOrWhiteSpace)) continue;
             if (row.Length < headers.Length) throw new InvalidOperationException("Each import row must contain all six columns.");
-            if (!decimal.TryParse(row[5], System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var price)) throw new InvalidOperationException("Each Price value must be a number using a decimal point.");
-            if (!bool.TryParse(row[2], out var active)) throw new InvalidOperationException("Category Active must be true or false.");
-            result.Add(new CatalogueImportRow(row[0].Trim(), row[1].Trim().ToUpperInvariant(), active, row[3].Trim(), string.IsNullOrWhiteSpace(row[4]) ? null : row[4].Trim(), price));
+            var priceValid = decimal.TryParse(row[5], System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var price);
+            var activeValid = bool.TryParse(row[2], out var active);
+            var quantity = 0;
+            var reorderLevel = 0;
+            var quantityValid = !hasStockColumns || int.TryParse(row.ElementAtOrDefault(6), out quantity);
+            var reorderValid = !hasStockColumns || int.TryParse(row.ElementAtOrDefault(7), out reorderLevel);
+            result.Add(new CatalogueImportRow(index + 2, row[0].Trim(), row[1].Trim().ToUpperInvariant(), active, activeValid, row[3].Trim(), string.IsNullOrWhiteSpace(row[4]) ? null : row[4].Trim(), price, priceValid, hasStockColumns ? quantity : 0, quantityValid, hasStockColumns ? reorderLevel : 0, reorderValid));
         }
         return result;
     }

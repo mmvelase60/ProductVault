@@ -6,22 +6,24 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProductVault.Data;
 using ProductVault.Monitoring;
+using ProductVault.Services;
 
 namespace ProductVault.Controllers.Api;
 
 [ApiController, Authorize, Route("api/products")]
-public class ProductsApiController(ApplicationDbContext db, UserManager<ApplicationUser> users, IProductCodeGenerator codes, IExcelProductService excel, IWebHostEnvironment environment) : ControllerBase
+public class ProductsApiController(ApplicationDbContext db, UserManager<ApplicationUser> users, IProductCodeGenerator codes, IExcelProductService excel, IAuditTrailService audit, IWebHostEnvironment environment) : ControllerBase
 {
     private string UserId => users.GetUserId(User)!;
 
     [HttpGet]
-    public async Task<ProductPageResponse> Get(int page = 1, int pageSize = 10, string? search = null, int? categoryId = null, string sort = "newest")
+    public async Task<ProductPageResponse> Get(int page = 1, int pageSize = 10, string? search = null, int? categoryId = null, bool lowStock = false, string sort = "newest")
     {
         page = Math.Max(page, 1); pageSize = Math.Clamp(pageSize, 1, 100);
         var query = db.Products.AsNoTracking().Include(p => p.Category).Where(p => p.OwnerId == UserId);
         search = search?.Trim();
         if (!string.IsNullOrWhiteSpace(search)) query = query.Where(product => product.Name.Contains(search) || product.ProductCode.Contains(search) || (product.Description != null && product.Description.Contains(search)));
         if (categoryId.HasValue) query = query.Where(product => product.CategoryId == categoryId.Value);
+        if (lowStock) query = query.Where(product => product.ReorderLevel > 0 && product.QuantityInStock <= product.ReorderLevel);
         query = sort switch
         {
             "name" => query.OrderBy(product => product.Name),
@@ -31,39 +33,42 @@ public class ProductsApiController(ApplicationDbContext db, UserManager<Applicat
             _ => query.OrderByDescending(product => product.CreatedDate)
         };
         var total = await query.CountAsync();
-        var items = await query.Skip((page - 1) * pageSize).Take(pageSize).Select(p => new ProductResponse(p.ProductId, p.ProductCode, p.Name, p.Description, p.Price, p.CategoryId, p.Category!.Name, p.ImagePath, Convert.ToBase64String(p.RowVersion))).ToListAsync();
+        var items = await query.Skip((page - 1) * pageSize).Take(pageSize).Select(p => new ProductResponse(p.ProductId, p.ProductCode, p.Name, p.Description, p.Price, p.QuantityInStock, p.ReorderLevel, p.CategoryId, p.Category!.Name, p.ImagePath, Convert.ToBase64String(p.RowVersion))).ToListAsync();
         return new ProductPageResponse(items, page, pageSize, total);
     }
 
     [HttpPost]
     public async Task<ActionResult<ProductResponse>> Create(ProductRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Name) || request.Price <= 0) return BadRequest(new { errors = new { product = "Name is required and price must be greater than zero." } });
+        if (!IsValid(request)) return BadRequest(new { errors = new { product = "Name, a positive price, and non-negative stock values are required." } });
         var category = await db.Categories.SingleOrDefaultAsync(c => c.CategoryId == request.CategoryId && c.OwnerId == UserId && c.IsActive); if (category is null) return BadRequest(new { errors = new { categoryId = "Choose an active category you own." } });
         Product? product = null;
         await db.Database.CreateExecutionStrategy().ExecuteAsync(async () =>
         {
             await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
-            product = new Product { Name = request.Name.Trim(), Description = request.Description?.Trim(), Price = request.Price, CategoryId = category.CategoryId, ProductCode = await codes.NextAsync(DateTime.UtcNow), OwnerId = UserId, CreatedBy = UserId, CreatedDate = DateTime.UtcNow };
+            product = new Product { Name = request.Name.Trim(), Description = request.Description?.Trim(), Price = request.Price, QuantityInStock = request.QuantityInStock, ReorderLevel = request.ReorderLevel, CategoryId = category.CategoryId, ProductCode = await codes.NextAsync(DateTime.UtcNow), OwnerId = UserId, CreatedBy = UserId, CreatedDate = DateTime.UtcNow };
             db.Products.Add(product);
+            await db.SaveChangesAsync();
+            audit.Record(UserId, UserId, "Created", "Product", product.ProductId.ToString(), product.Name);
             await db.SaveChangesAsync();
             await transaction.CommitAsync();
         });
         ProductVaultMetrics.ProductsCreated.Inc();
-        return CreatedAtAction(nameof(Get), new ProductResponse(product!.ProductId, product.ProductCode, product.Name, product.Description, product.Price, category.CategoryId, category.Name, product.ImagePath, Convert.ToBase64String(product.RowVersion)));
+        return CreatedAtAction(nameof(Get), ToResponse(product!, category.Name));
     }
 
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, ProductRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.Name) || request.Price <= 0) return BadRequest(new { errors = new { product = "Name is required and price must be greater than zero." } });
+        if (!IsValid(request)) return BadRequest(new { errors = new { product = "Name, a positive price, and non-negative stock values are required." } });
         var product = await db.Products.SingleOrDefaultAsync(p => p.ProductId == id && p.OwnerId == UserId); if (product is null) return NotFound();
         var category = await db.Categories.SingleOrDefaultAsync(c => c.CategoryId == request.CategoryId && c.OwnerId == UserId && c.IsActive); if (category is null) return BadRequest(new { errors = new { categoryId = "Choose an active category you own." } });
         if (string.IsNullOrWhiteSpace(request.RowVersion)) return BadRequest(new { message = "The product version is required." });
         try
         {
-            product.Name = request.Name.Trim(); product.Description = request.Description?.Trim(); product.Price = request.Price; product.CategoryId = category.CategoryId; product.UpdatedBy = UserId; product.UpdatedDate = DateTime.UtcNow;
+            product.Name = request.Name.Trim(); product.Description = request.Description?.Trim(); product.Price = request.Price; product.QuantityInStock = request.QuantityInStock; product.ReorderLevel = request.ReorderLevel; product.CategoryId = category.CategoryId; product.UpdatedBy = UserId; product.UpdatedDate = DateTime.UtcNow;
             db.Entry(product).Property(item => item.RowVersion).OriginalValue = Convert.FromBase64String(request.RowVersion);
+            audit.Record(UserId, UserId, "Updated", "Product", product.ProductId.ToString(), product.Name);
             await db.SaveChangesAsync();
             return NoContent();
         }
@@ -73,7 +78,7 @@ public class ProductsApiController(ApplicationDbContext db, UserManager<Applicat
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
-    { var product = await db.Products.SingleOrDefaultAsync(p => p.ProductId == id && p.OwnerId == UserId); if (product is null) return NotFound(); var image = product.ImagePath; db.Products.Remove(product); await db.SaveChangesAsync(); DeleteImage(image); ProductVaultMetrics.ProductsDeleted.Inc(); return NoContent(); }
+    { var product = await db.Products.SingleOrDefaultAsync(p => p.ProductId == id && p.OwnerId == UserId); if (product is null) return NotFound(); var image = product.ImagePath; audit.Record(UserId, UserId, "Deleted", "Product", product.ProductId.ToString(), product.Name); db.Products.Remove(product); await db.SaveChangesAsync(); DeleteImage(image); ProductVaultMetrics.ProductsDeleted.Inc(); return NoContent(); }
 
     [HttpPost("{id:int}/image")]
     public async Task<ActionResult<ProductResponse>> UploadImage(int id, IFormFile? file)
@@ -88,9 +93,10 @@ public class ProductsApiController(ApplicationDbContext db, UserManager<Applicat
             product.ImagePath = image;
             product.UpdatedBy = UserId;
             product.UpdatedDate = DateTime.UtcNow;
+            audit.Record(UserId, UserId, "Updated image", "Product", product.ProductId.ToString(), product.Name);
             await db.SaveChangesAsync();
             DeleteImage(previousImage);
-            return Ok(new ProductResponse(product.ProductId, product.ProductCode, product.Name, product.Description, product.Price, product.CategoryId, product.Category!.Name, product.ImagePath, Convert.ToBase64String(product.RowVersion)));
+            return Ok(ToResponse(product, product.Category!.Name));
         }
         catch (InvalidOperationException exception) { return BadRequest(new { message = exception.Message }); }
     }
@@ -125,6 +131,8 @@ public class ProductsApiController(ApplicationDbContext db, UserManager<Applicat
                 await transaction.CommitAsync();
             });
             ProductVaultMetrics.ProductsCreated.Inc(rows.Count);
+            audit.Record(UserId, UserId, "Imported", "Product catalogue", "excel", "Excel product import", $"Imported {rows.Count} products.");
+            await db.SaveChangesAsync();
             return Ok(new { imported = rows.Count });
         }
         catch (InvalidOperationException exception) { return BadRequest(new { message = exception.Message }); }
@@ -150,8 +158,15 @@ public class ProductsApiController(ApplicationDbContext db, UserManager<Applicat
         var file = Path.Combine(environment.WebRootPath, path.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
         if (System.IO.File.Exists(file)) System.IO.File.Delete(file);
     }
+
+    private static bool IsValid(ProductRequest request) => !string.IsNullOrWhiteSpace(request.Name) && request.Price > 0 && request.QuantityInStock >= 0 && request.ReorderLevel >= 0;
+
+    private static ProductResponse ToResponse(Product product, string categoryName) => new(product.ProductId, product.ProductCode, product.Name, product.Description, product.Price, product.QuantityInStock, product.ReorderLevel, product.CategoryId, categoryName, product.ImagePath, Convert.ToBase64String(product.RowVersion));
 }
 
-public sealed record ProductRequest(string Name, string? Description, decimal Price, int CategoryId, string? RowVersion = null);
-public sealed record ProductResponse(int ProductId, string ProductCode, string Name, string? Description, decimal Price, int CategoryId, string CategoryName, string? ImagePath, string RowVersion);
+public sealed record ProductRequest(string Name, string? Description, decimal Price, int QuantityInStock, int ReorderLevel, int CategoryId, string? RowVersion = null);
+public sealed record ProductResponse(int ProductId, string ProductCode, string Name, string? Description, decimal Price, int QuantityInStock, int ReorderLevel, int CategoryId, string CategoryName, string? ImagePath, string RowVersion)
+{
+    public bool IsLowStock => ReorderLevel > 0 && QuantityInStock <= ReorderLevel;
+}
 public sealed record ProductPageResponse(IReadOnlyList<ProductResponse> Items, int Page, int PageSize, int TotalCount);

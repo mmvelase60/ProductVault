@@ -37,6 +37,7 @@ import { Category, Product, ProductPage } from '../../core/models';
         <option value="price-desc">Price: high to low</option>
         <option value="code">Product code</option>
       </select>
+      <label class="filter-check"><input type="checkbox" [(ngModel)]="lowStock"> Low stock only</label>
       <button class="button dark" type="button" (click)="apply()">Apply</button>
     </section>
 
@@ -56,7 +57,7 @@ import { Category, Product, ProductPage } from '../../core/models';
     <section class="split-layout products-layout">
       <section class="card table-card">
         <table *ngIf="page?.items?.length; else empty">
-          <thead><tr><th>Product</th><th>Code</th><th>Category</th><th class="right">Price</th><th><span class="sr-only">Actions</span></th></tr></thead>
+          <thead><tr><th>Product</th><th>Code</th><th>Category</th><th>Stock</th><th class="right">Price</th><th><span class="sr-only">Actions</span></th></tr></thead>
           <tbody>
             <tr *ngFor="let product of page.items">
               <td>
@@ -68,6 +69,7 @@ import { Category, Product, ProductPage } from '../../core/models';
               </td>
               <td><code>{{ product.productCode }}</code></td>
               <td><span class="badge">{{ product.categoryName }}</span></td>
+              <td><span [class]="product.isLowStock ? 'badge warning' : 'badge'">{{ product.quantityInStock }}{{ product.reorderLevel > 0 ? ' / min ' + product.reorderLevel : '' }}</span></td>
               <td class="right"><strong>{{ product.price | currency:'ZAR':'symbol-narrow' }}</strong></td>
               <td>
                 <button class="text-button" type="button" (click)="edit(product)">Edit</button>
@@ -97,6 +99,10 @@ import { Category, Product, ProductPage } from '../../core/models';
           <label>Price<input type="number" min="0.01" step="0.01" [(ngModel)]="form.price" name="price" required></label>
           <label>Category<select [(ngModel)]="form.categoryId" name="category" required><option [ngValue]="0">Select a category</option><option *ngFor="let category of activeCategories" [ngValue]="category.categoryId">{{ category.name }}</option></select></label>
         </div>
+        <div class="two-cols">
+          <label>Quantity in stock<input type="number" min="0" step="1" [(ngModel)]="form.quantityInStock" name="quantityInStock" required></label>
+          <label>Reorder level<input type="number" min="0" step="1" [(ngModel)]="form.reorderLevel" name="reorderLevel" required><small>Set 0 to disable low-stock alerts.</small></label>
+        </div>
         <label>Image<input type="file" accept="image/jpeg,image/png,image/gif,image/webp" (change)="selectImage($event)"><small>JPG, PNG, GIF, or WEBP; maximum 5 MB.</small></label>
         <p class="error" role="alert" *ngIf="formError">{{ formError }}</p>
         <div class="actions">
@@ -113,6 +119,7 @@ export class ProductsComponent implements OnInit {
   page?: ProductPage;
   search = '';
   categoryId?: number;
+  lowStock = false;
   sort = 'newest';
   showForm = false;
   editing?: Product;
@@ -125,7 +132,7 @@ export class ProductsComponent implements OnInit {
   importing = false;
   exporting = false;
   deletingId?: number;
-  form = { name: '', description: '', price: 0, categoryId: 0 };
+  form = { name: '', description: '', price: 0, quantityInStock: 0, reorderLevel: 0, categoryId: 0 };
 
   constructor(private readonly api: ApiService) {}
 
@@ -143,7 +150,7 @@ export class ProductsComponent implements OnInit {
 
   load(page: number): void {
     this.error = '';
-    this.api.products({ page, search: this.search, categoryId: this.categoryId, sort: this.sort }).subscribe({
+    this.api.products({ page, search: this.search, categoryId: this.categoryId, lowStock: this.lowStock, sort: this.sort }).subscribe({
       next: result => this.page = result,
       error: response => this.error = response.error?.message ?? 'Products could not be loaded.'
     });
@@ -154,7 +161,7 @@ export class ProductsComponent implements OnInit {
   newProduct(): void {
     this.editing = undefined;
     this.image = undefined;
-    this.form = { name: '', description: '', price: 0, categoryId: 0 };
+    this.form = { name: '', description: '', price: 0, quantityInStock: 0, reorderLevel: 0, categoryId: 0 };
     this.formError = '';
     this.showForm = true;
   }
@@ -162,7 +169,7 @@ export class ProductsComponent implements OnInit {
   edit(product: Product): void {
     this.editing = product;
     this.image = undefined;
-    this.form = { name: product.name, description: product.description ?? '', price: product.price, categoryId: product.categoryId };
+    this.form = { name: product.name, description: product.description ?? '', price: product.price, quantityInStock: product.quantityInStock, reorderLevel: product.reorderLevel, categoryId: product.categoryId };
     this.formError = '';
     this.showForm = true;
   }
@@ -176,8 +183,8 @@ export class ProductsComponent implements OnInit {
   selectImport(event: Event): void { this.importFile = (event.target as HTMLInputElement).files?.[0]; }
 
   save(): void {
-    if (this.saving || !this.form.categoryId || this.form.price <= 0) {
-      this.formError = 'Select a category and enter a valid price.';
+    if (this.saving || !this.form.categoryId || this.form.price <= 0 || this.form.quantityInStock < 0 || this.form.reorderLevel < 0) {
+      this.formError = 'Select a category and enter valid price and stock values.';
       return;
     }
 
