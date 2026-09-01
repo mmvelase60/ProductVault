@@ -77,6 +77,7 @@ public class Program
         builder.Services.AddScoped<IExcelProductService, ExcelProductService>();
         builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection(EmailOptions.SectionName));
         builder.Services.AddScoped<IApplicationEmailSender, SmtpEmailSender>();
+        builder.Services.AddScoped<IEmailVerificationCodeService, EmailVerificationCodeService>();
 
         var app = builder.Build();
 

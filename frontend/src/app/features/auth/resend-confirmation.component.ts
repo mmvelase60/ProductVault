@@ -11,12 +11,12 @@ import { AuthService } from '../../core/auth.service';
     <section class="auth-layout">
       <form class="auth-card" #resendForm="ngForm" (ngSubmit)="submit()" [attr.aria-busy]="loading">
         <span class="eyebrow">Account security</span>
-        <h1>Resend confirmation</h1>
-        <p>Enter your email address and we will send a new confirmation link if it is needed.</p>
+        <h1>Resend verification code</h1>
+        <p>Enter your email address and we will send a new verification code if it is needed.</p>
         <label>Email<input type="email" [(ngModel)]="email" name="email" autocomplete="email" required autofocus></label>
         <p class="notice" role="status" *ngIf="message">{{ message }}</p>
         <p class="error" role="alert" *ngIf="error">{{ error }}</p>
-        <button class="button" type="submit" [disabled]="resendForm.invalid || loading">{{ loading ? 'Sending…' : 'Resend confirmation' }}</button>
+        <button class="button" type="submit" [disabled]="resendForm.invalid || loading">{{ loading ? 'Sending…' : 'Resend code' }}</button>
         <p class="muted"><a routerLink="/login">Back to sign in</a></p>
       </form>
     </section>
@@ -44,7 +44,7 @@ export class ResendConfirmationComponent {
       },
       error: response => {
         this.loading = false;
-        this.error = response.error?.message ?? 'The confirmation email could not be sent.';
+        this.error = response.error?.message ?? 'The verification code could not be sent.';
       }
     });
   }

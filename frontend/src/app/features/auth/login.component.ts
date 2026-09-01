@@ -19,7 +19,7 @@ import { AuthService } from '../../core/auth.service';
         <p class="notice" role="status" *ngIf="notice">{{ notice }}</p>
         <button class="button" type="submit" [disabled]="loginForm.invalid || loading">{{ loading ? 'Signing in…' : 'Sign in' }}</button>
         <p class="muted"><a routerLink="/forgot-password">Forgot your password?</a></p>
-        <p class="muted" *ngIf="confirmationRequired"><a routerLink="/resend-confirmation" [queryParams]="{ email }">Resend confirmation email</a></p>
+        <p class="muted" *ngIf="confirmationRequired"><a routerLink="/resend-confirmation" [queryParams]="{ email }">Resend verification code</a></p>
         <p class="muted">New here? <a routerLink="/register">Create an account</a></p>
       </form>
     </section>
@@ -35,8 +35,10 @@ export class LoginComponent {
 
   constructor(private readonly auth: AuthService, private readonly router: Router, route: ActivatedRoute) {
     this.email = route.snapshot.queryParamMap.get('email') ?? '';
-    if (route.snapshot.queryParamMap.get('registered') === '1')
-      this.notice = 'Account created. Check your email and confirm your address before signing in.';
+    if (route.snapshot.queryParamMap.get('verified') === '1')
+      this.notice = 'Email verified. You can now sign in.';
+    else if (route.snapshot.queryParamMap.get('registered') === '1')
+      this.notice = 'Account created. Check your email and enter the verification code before signing in.';
   }
 
   submit(): void {

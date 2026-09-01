@@ -2,7 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from './core/auth.guard';
 import { LoginComponent } from './features/auth/login.component';
 import { RegisterComponent } from './features/auth/register.component';
-import { ConfirmEmailComponent } from './features/auth/confirm-email.component';
+import { VerifyEmailComponent } from './features/auth/verify-email.component';
 import { ForgotPasswordComponent } from './features/auth/forgot-password.component';
 import { ResetPasswordComponent } from './features/auth/reset-password.component';
 import { ResendConfirmationComponent } from './features/auth/resend-confirmation.component';
@@ -13,7 +13,7 @@ import { ProductsComponent } from './features/products/products.component';
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
-  { path: 'confirm-email', component: ConfirmEmailComponent },
+  { path: 'verify-email', component: VerifyEmailComponent },
   { path: 'forgot-password', component: ForgotPasswordComponent },
   { path: 'reset-password', component: ResetPasswordComponent },
   { path: 'resend-confirmation', component: ResendConfirmationComponent },

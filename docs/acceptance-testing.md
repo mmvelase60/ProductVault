@@ -5,7 +5,7 @@ Run the application with the HTTPS launch profile and use a fresh test account w
 | ID | Scenario | Steps | Expected result |
 | --- | --- | --- | --- |
 | AT-01 | Register and login | Register with a new email/password; sign out and sign in. | User reaches the authenticated home page. |
-| AT-01a | Confirm email | Use the confirmation link delivered by Gmail, then sign in. | Confirmation page succeeds; sign-in is allowed only after confirmation. |
+| AT-01a | Verify email | Enter the six-digit verification code delivered by Gmail, then sign in. | Verification succeeds; sign-in is allowed only after verification. |
 | AT-01b | Recover password | Request a reset link, choose a new password, then sign in. | Reset succeeds and the new password works. |
 | AT-02 | Load demo catalogue | In an empty workspace, select **Load demo data**. | Exactly 3 categories and 5 products appear; the dashboard total is R2,387.48. |
 | AT-03 | Create valid category | Add `Accessories` with code `ACC001`. | Category appears as Active. |

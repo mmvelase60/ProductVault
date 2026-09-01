@@ -35,7 +35,7 @@ export class RegisterComponent {
     this.loading = true;
     this.error = '';
     this.auth.register(this.email, this.password).subscribe({
-      next: () => this.router.navigate(['/login'], { queryParams: { registered: 1, email: this.email } }),
+      next: () => this.router.navigate(['/verify-email'], { queryParams: { email: this.email } }),
       error: response => {
         const errors = response.error?.errors;
         this.error = errors ? Object.values(errors).join(' ') : 'Registration failed.';

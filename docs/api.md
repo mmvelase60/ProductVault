@@ -13,10 +13,10 @@ Swagger is available at `/swagger` while the API runs in Development. Every prot
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| POST | `/auth/register` | Register an Identity user and send a confirmation email. |
+| POST | `/auth/register` | Register an Identity user and send a six-digit verification code. |
 | POST | `/auth/login` | Validate confirmed credentials and receive a JWT. |
-| POST | `/auth/confirm-email` | Confirm an email address using the user ID and token from the email link. |
-| POST | `/auth/resend-confirmation` | Request another confirmation email. |
+| POST | `/auth/verify-email-code` | Verify an email address using its email address and six-digit code. |
+| POST | `/auth/resend-confirmation` | Request a replacement verification code. |
 | POST | `/auth/forgot-password` | Request a password-reset email. |
 | POST | `/auth/reset-password` | Reset a password using the user ID and token from the email link. |
 
@@ -24,7 +24,11 @@ Swagger is available at `/swagger` while the API runs in Development. Every prot
 { "email": "user@example.com", "password": "Password1" }
 ```
 
-Registration returns `202 Accepted` after sending the confirmation email. Login returns `accessToken`, `expiresAt`, and `email` only after the email is confirmed. Password-recovery and resend endpoints return a generic success message so callers cannot use them to enumerate accounts.
+```json
+{ "email": "user@example.com", "code": "123456" }
+```
+
+Registration returns `202 Accepted` after sending the verification code. Codes are single-use, expire after 10 minutes, and are invalidated after five incorrect attempts. Login returns `accessToken`, `expiresAt`, and `email` only after the email is verified. Password-recovery and resend endpoints return a generic success message so callers cannot use them to enumerate accounts.
 
 ## Dashboard
 
@@ -65,5 +69,6 @@ Product list sorting supports `newest`, `name`, `price-asc`, `price-desc`, and `
 | 204 | Update or delete succeeded. |
 | 400 | Input, upload, or import validation failed. |
 | 401 | Missing, expired, or invalid JWT. |
+| 403 | Account email must be verified before sign-in. |
 | 404 | Record does not exist or is not owned by the caller. |
 | 409 | Uniqueness or optimistic concurrency conflict. |

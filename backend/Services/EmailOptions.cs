@@ -11,4 +11,5 @@ public sealed class EmailOptions
     public string FromAddress { get; init; } = string.Empty;
     public string FromName { get; init; } = "ProductVault";
     public string FrontendBaseUrl { get; init; } = "http://localhost:4200";
+    public int VerificationCodeLifetimeMinutes { get; init; } = 10;
 }

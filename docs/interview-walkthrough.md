@@ -18,7 +18,7 @@ Register or sign in, then show the dashboard. For a new user, select **Load demo
 ## 3. Explain the important technical decisions
 
 - Angular keeps the UI separate from the API and sends the JWT through one HTTP interceptor.
-- ASP.NET Core Identity hashes passwords and issues time-limited email-confirmation and password-reset tokens; the API validates JWT issuer, audience, signing key, and expiry.
+- ASP.NET Core Identity hashes passwords and issues time-limited password-reset tokens; registration codes are cryptographically generated, stored as hashes, single-use, and rate-limited to five attempts. The API validates JWT issuer, audience, signing key, and expiry.
 - The server derives the current user from the token and applies `OwnerId` filtering to every category/product operation. This prevents one user from reading or changing another user's data.
 - EF Core migrations manage the MySQL schema. Database indexes back up the unique code rules, while timestamp row versions detect conflicting edits.
 - Product creation and Excel imports use serializable, retry-safe transactions to protect product-code generation.

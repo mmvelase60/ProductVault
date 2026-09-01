@@ -24,8 +24,8 @@ export class AuthService {
     return this.http.post<EmailActionResponse>(`${apiUrl}/auth/register`, { email, password });
   }
 
-  confirmEmail(userId: string, token: string): Observable<EmailActionResponse> {
-    return this.http.post<EmailActionResponse>(`${apiUrl}/auth/confirm-email`, { userId, token });
+  verifyEmailCode(email: string, code: string): Observable<EmailActionResponse> {
+    return this.http.post<EmailActionResponse>(`${apiUrl}/auth/verify-email-code`, { email, code });
   }
 
   resendConfirmation(email: string): Observable<EmailActionResponse> {

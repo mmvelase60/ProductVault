@@ -17,6 +17,7 @@ public class AuthController(
     UserManager<IdentityUser> users,
     IConfiguration configuration,
     IApplicationEmailSender emailSender,
+    IEmailVerificationCodeService verificationCodes,
     IOptions<EmailOptions> emailOptions,
     ILogger<AuthController> logger) : ControllerBase
 {
@@ -31,14 +32,14 @@ public class AuthController(
 
         try
         {
-            await SendConfirmationEmailAsync(user);
-            return Accepted(new MessageResponse("Account created. Check your email to confirm your address before signing in."));
+            await SendVerificationCodeEmailAsync(user);
+            return Accepted(new MessageResponse("Account created. Enter the verification code sent to your email before signing in."));
         }
         catch (Exception exception)
         {
-            logger.LogError(exception, "Confirmation email could not be sent for a newly registered user.");
+            logger.LogError(exception, "Verification code email could not be sent for a newly registered user.");
             return StatusCode(StatusCodes.Status500InternalServerError,
-                new MessageResponse("Account created, but the confirmation email could not be sent. Check the email configuration, then request a new confirmation link."));
+                new MessageResponse("Account created, but the verification code could not be sent. Check the email configuration, then request a new code."));
         }
     }
 
@@ -51,23 +52,39 @@ public class AuthController(
 
         if (!user.EmailConfirmed)
             return StatusCode(StatusCodes.Status403Forbidden,
-                new MessageResponse("Confirm your email address before signing in.", "email_confirmation_required"));
+                new MessageResponse("Verify your email address before signing in.", "email_confirmation_required"));
 
         return Ok(CreateResponse(user));
     }
 
-    [HttpPost("confirm-email")]
-    public async Task<ActionResult<MessageResponse>> ConfirmEmail(ConfirmEmailRequest request)
+    [HttpPost("verify-email-code")]
+    public async Task<ActionResult<MessageResponse>> VerifyEmailCode(VerifyEmailCodeRequest request)
     {
-        var user = await users.FindByIdAsync(request.UserId);
+        var user = await users.FindByEmailAsync(request.Email.Trim());
         if (user is null)
-            return BadRequest(new MessageResponse("This confirmation link is invalid or has expired."));
+            return BadRequest(new MessageResponse("The verification code is invalid or has expired."));
 
-        var result = await users.ConfirmEmailAsync(user, request.Token);
-        if (!result.Succeeded)
-            return BadRequest(new MessageResponse("This confirmation link is invalid or has expired. Request a new link and try again."));
+        if (user.EmailConfirmed)
+            return Ok(new MessageResponse("Email already verified. You can sign in."));
 
-        return Ok(new MessageResponse("Email confirmed. You can now sign in."));
+        var result = await verificationCodes.VerifyAsync(user, request.Code);
+        if (result is not EmailVerificationCodeResult.Success)
+        {
+            var message = result switch
+            {
+                EmailVerificationCodeResult.Expired => "This verification code has expired. Request a new code and try again.",
+                EmailVerificationCodeResult.TooManyAttempts => "Too many incorrect attempts. Request a new verification code.",
+                _ => "The verification code is incorrect. Try again."
+            };
+            return BadRequest(new MessageResponse(message));
+        }
+
+        user.EmailConfirmed = true;
+        var update = await users.UpdateAsync(user);
+        if (!update.Succeeded)
+            return StatusCode(StatusCodes.Status500InternalServerError, new MessageResponse("Email verification could not be completed. Try again."));
+
+        return Ok(new MessageResponse("Email verified. You can now sign in."));
     }
 
     [HttpPost("resend-confirmation")]
@@ -78,17 +95,17 @@ public class AuthController(
         {
             try
             {
-                await SendConfirmationEmailAsync(user);
+                await SendVerificationCodeEmailAsync(user);
             }
             catch (Exception exception)
             {
-                logger.LogError(exception, "Confirmation email could not be resent.");
+                logger.LogError(exception, "Verification code email could not be resent.");
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    new MessageResponse("The confirmation email could not be sent. Check the email configuration and try again."));
+                    new MessageResponse("The verification code could not be sent. Check the email configuration and try again."));
             }
         }
 
-        return Ok(new MessageResponse("If an unconfirmed account exists for that address, a confirmation email has been sent."));
+        return Ok(new MessageResponse("If an unverified account exists for that address, a verification code has been sent."));
     }
 
     [HttpPost("forgot-password")]
@@ -129,12 +146,12 @@ public class AuthController(
         return Ok(new MessageResponse("Password reset successfully. You can now sign in."));
     }
 
-    private async Task SendConfirmationEmailAsync(IdentityUser user)
+    private async Task SendVerificationCodeEmailAsync(IdentityUser user)
     {
-        var token = await users.GenerateEmailConfirmationTokenAsync(user);
-        var link = BuildFrontendLink("confirm-email", user.Id, token);
-        await SendEmailAsync(user.Email!, "Confirm your ProductVault email", "Confirm your email", link,
-            "Thanks for creating a ProductVault account. Confirm your email address to activate secure access to your private workspace.");
+        var code = await verificationCodes.CreateAsync(user);
+        var html = $"<h1>Verify your ProductVault email</h1><p>Enter this verification code in ProductVault:</p><p style=\"font-size:28px;font-weight:700;letter-spacing:6px\">{code}</p><p>This code expires in {emailOptions.Value.VerificationCodeLifetimeMinutes} minutes. If you did not create an account, you can safely ignore this email.</p>";
+        await emailSender.SendAsync(user.Email!, "Your ProductVault verification code", html,
+            $"Your ProductVault verification code is {code}. It expires in {emailOptions.Value.VerificationCodeLifetimeMinutes} minutes.");
     }
 
     private async Task SendEmailAsync(string recipient, string subject, string heading, string link, string copy)
@@ -173,7 +190,7 @@ public class AuthController(
 public sealed record RegisterRequest([Required, EmailAddress] string Email, [Required, MinLength(8)] string Password);
 public sealed record LoginRequest([Required, EmailAddress] string Email, [Required] string Password);
 public sealed record EmailRequest([Required, EmailAddress] string Email);
-public sealed record ConfirmEmailRequest([Required] string UserId, [Required] string Token);
+public sealed record VerifyEmailCodeRequest([Required, EmailAddress] string Email, [Required, RegularExpression("^[0-9]{6}$")] string Code);
 public sealed record ResetPasswordRequest([Required] string UserId, [Required] string Token, [Required, MinLength(8)] string Password);
 public sealed record MessageResponse(string Message, string? Code = null);
 public sealed record AuthResponse(string AccessToken, DateTime ExpiresAt, string Email);

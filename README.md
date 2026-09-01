@@ -12,7 +12,7 @@ Every product and category belongs to its authenticated owner. The API enforces 
 
 ## Features
 
-- Email-confirmed registration, password recovery, and JWT sign-in for the Angular SPA.
+- One-time email-code verification, password recovery, and JWT sign-in for the Angular SPA.
 - Category create/edit with per-user `ABC123` code validation.
 - Responsive Angular UI with an accessible mobile navigation, touch-friendly controls, and scroll-safe catalogue tables.
 - Product CRUD, 10-item paging, searching, category filtering, sorting, and optimistic concurrency.
@@ -52,7 +52,7 @@ dotnet user-secrets set --project backend/ProductVault.csproj "Jwt:Key" "a-long-
 
 ### Optional but recommended: Gmail email delivery
 
-Email confirmation and password-reset links use Gmail SMTP. Enable two-step verification on a dedicated Gmail account, create a Gmail **App Password**, then store it locally (never in Git):
+Email verification codes and password-reset links use Gmail SMTP. Enable two-step verification on a dedicated Gmail account, create a Gmail **App Password**, then store it locally (never in Git):
 
 ```powershell
 dotnet user-secrets set --project backend/ProductVault.csproj "Email:Username" "YOUR_GMAIL_ADDRESS"
@@ -87,7 +87,7 @@ Open the localhost URL printed by Angular (normally `http://localhost:4200`), re
 
 ## API authentication
 
-Registration creates an unconfirmed account and sends a time-limited confirmation link. Confirmed users can sign in with an eight-hour JWT access token. Angular stores the active session locally and its interceptor sends:
+Registration creates an unverified account and emails a single-use six-digit verification code. The code expires after 10 minutes and is required before sign-in; confirmed users then receive an eight-hour JWT access token. Angular stores the active session locally and its interceptor sends:
 
 ```text
 Authorization: Bearer <access-token>
