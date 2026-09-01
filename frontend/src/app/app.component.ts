@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { AsyncPipe, NgIf } from '@angular/common';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from './core/auth.service';
 
 @Component({
@@ -16,6 +16,11 @@ import { AuthService } from './core/auth.service';
 })
 export class AppComponent {
   menuOpen = false;
-  constructor(readonly auth: AuthService) {}
-  logout(): void { this.menuOpen = false; this.auth.logout(); }
+  constructor(readonly auth: AuthService, private readonly router: Router) {}
+
+  logout(): void {
+    this.menuOpen = false;
+    this.auth.logout();
+    void this.router.navigateByUrl('/login');
+  }
 }
