@@ -22,7 +22,7 @@ flowchart TB
 | --- | --- | --- |
 | Frontend | Angular standalone components, route guard, JWT interceptor | Render the SPA, validate forms, and call the API with bearer tokens. |
 | API | ASP.NET Core REST controllers, JWT authentication, CORS | Authorize requests, validate input, and return JSON/file responses. |
-| Application | `ProductCodeGenerator`, `ExcelProductService` | Hold reusable business workflows such as product-code creation and Excel conversion. |
+| Application | `ProductCodeGenerator`, `ExcelProductService`, `EmailVerificationCodeService`, `SmtpEmailSender` | Hold reusable workflows such as product-code creation, CSV/XLSX conversion, email-code protection, and email delivery. |
 | Domain | `Product`, `Category`, `AuditableEntity` | Represent catalogue rules, audit state, ownership, and concurrency data. |
 | Infrastructure | EF Core, MySQL, Identity, local image storage | Persist data, authenticate users, store images, and apply migrations. |
 | Observability | prometheus-net, Prometheus, Grafana | Collect request/business metrics and visualize them locally. |

@@ -1,6 +1,7 @@
 # ProductVault technical documentation
 
 - [Architecture](architecture.md)
+- [Codebase and frontend/backend integration guide](codebase-guide.md)
 - [Design diagrams](design.md)
 - [API reference](api.md)
 - [Database schema](database-schema.md)
