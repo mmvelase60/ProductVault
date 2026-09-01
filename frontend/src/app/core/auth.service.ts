@@ -20,8 +20,8 @@ export class AuthService {
     return this.http.post<AuthResponse>(`${apiUrl}/auth/login`, { email, password }).pipe(tap(session => this.store(session)));
   }
 
-  register(email: string, password: string): Observable<EmailActionResponse> {
-    return this.http.post<EmailActionResponse>(`${apiUrl}/auth/register`, { email, password });
+  register(firstName: string, surname: string, email: string, password: string): Observable<EmailActionResponse> {
+    return this.http.post<EmailActionResponse>(`${apiUrl}/auth/register`, { firstName, surname, email, password });
   }
 
   verifyEmailCode(email: string, code: string): Observable<EmailActionResponse> {

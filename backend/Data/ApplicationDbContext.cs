@@ -4,7 +4,7 @@ using ProductVault.Models;
 
 namespace ProductVault.Data;
 
-public class ApplicationDbContext : IdentityDbContext
+public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)
@@ -17,6 +17,12 @@ public class ApplicationDbContext : IdentityDbContext
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+
+        builder.Entity<ApplicationUser>(entity =>
+        {
+            entity.Property(x => x.FirstName).HasMaxLength(100);
+            entity.Property(x => x.Surname).HasMaxLength(100);
+        });
 
         builder.Entity<Category>(entity =>
         {

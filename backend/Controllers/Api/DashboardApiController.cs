@@ -1,16 +1,16 @@
 using System.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using ProductVault.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProductVault.Data;
-using ProductVault.Models;
 using ProductVault.Monitoring;
 
 namespace ProductVault.Controllers.Api;
 
 [ApiController, Authorize, Route("api/dashboard")]
-public class DashboardApiController(ApplicationDbContext db, UserManager<IdentityUser> users, IProductCodeGenerator codes) : ControllerBase
+public class DashboardApiController(ApplicationDbContext db, UserManager<ApplicationUser> users, IProductCodeGenerator codes) : ControllerBase
 {
     private string UserId => users.GetUserId(User)!;
 

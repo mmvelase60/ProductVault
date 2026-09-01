@@ -13,8 +13,11 @@ import { AuthService } from '../../core/auth.service';
         <span class="eyebrow">Private workspace</span>
         <h1>Create your account</h1>
         <p>Start managing categories and products securely.</p>
-        <label>Email<input type="email" [(ngModel)]="email" name="email" autocomplete="email" required autofocus></label>
+        <label>First name<input type="text" [(ngModel)]="firstName" name="firstName" autocomplete="given-name" required autofocus></label>
+        <label>Surname<input type="text" [(ngModel)]="surname" name="surname" autocomplete="family-name" required></label>
+        <label>Email<input type="email" [(ngModel)]="email" name="email" autocomplete="email" required></label>
         <label>Password<input type="password" [(ngModel)]="password" name="password" autocomplete="new-password" required minlength="8"><small>At least 8 characters.</small></label>
+        <p class="muted">Your username is generated automatically, for example: Mthokozisi Mvelase → MMvelase.</p>
         <p class="error" role="alert" *ngIf="error">{{ error }}</p>
         <button class="button" type="submit" [disabled]="registerForm.invalid || loading">{{ loading ? 'Creating…' : 'Create account' }}</button>
         <p class="muted">Already registered? <a routerLink="/login">Sign in</a></p>
@@ -23,6 +26,8 @@ import { AuthService } from '../../core/auth.service';
   `
 })
 export class RegisterComponent {
+  firstName = '';
+  surname = '';
   email = '';
   password = '';
   error = '';
@@ -34,7 +39,7 @@ export class RegisterComponent {
     if (this.loading) return;
     this.loading = true;
     this.error = '';
-    this.auth.register(this.email, this.password).subscribe({
+    this.auth.register(this.firstName, this.surname, this.email, this.password).subscribe({
       next: () => this.router.navigate(['/verify-email'], { queryParams: { email: this.email } }),
       error: response => {
         const errors = response.error?.errors;

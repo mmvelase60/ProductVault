@@ -3,18 +3,20 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Options;
 using ProductVault.Services;
+using ProductVault.Models;
 
 namespace ProductVault.Controllers.Api;
 
 [ApiController]
 [Route("api/auth")]
 public class AuthController(
-    UserManager<IdentityUser> users,
+    UserManager<ApplicationUser> users,
     IConfiguration configuration,
     IApplicationEmailSender emailSender,
     IEmailVerificationCodeService verificationCodes,
@@ -24,8 +26,20 @@ public class AuthController(
     [HttpPost("register")]
     public async Task<ActionResult<MessageResponse>> Register(RegisterRequest request)
     {
+        var firstName = request.FirstName.Trim();
+        var surname = request.Surname.Trim();
+        if (!firstName.Any(char.IsLetterOrDigit) || !surname.Any(char.IsLetterOrDigit))
+            return BadRequest(new { errors = new { Name = "First name and surname must contain letters or numbers." } });
+
         var email = request.Email.Trim();
-        var user = new IdentityUser { UserName = email, Email = email };
+        var username = await CreateUniqueUsernameAsync(firstName, surname);
+        var user = new ApplicationUser
+        {
+            FirstName = firstName,
+            Surname = surname,
+            UserName = username,
+            Email = email
+        };
         var result = await users.CreateAsync(user, request.Password);
         if (!result.Succeeded)
             return BadRequest(new { errors = result.Errors.ToDictionary(error => error.Code, error => error.Description) });
@@ -146,7 +160,7 @@ public class AuthController(
         return Ok(new MessageResponse("Password reset successfully. You can now sign in."));
     }
 
-    private async Task SendVerificationCodeEmailAsync(IdentityUser user)
+    private async Task SendVerificationCodeEmailAsync(ApplicationUser user)
     {
         var code = await verificationCodes.CreateAsync(user);
         var html = $"<h1>Verify your ProductVault email</h1><p>Enter this verification code in ProductVault:</p><p style=\"font-size:28px;font-weight:700;letter-spacing:6px\">{code}</p><p>This code expires in {emailOptions.Value.VerificationCodeLifetimeMinutes} minutes. If you did not create an account, you can safely ignore this email.</p>";
@@ -169,7 +183,7 @@ public class AuthController(
         return $"{baseUrl}/{path}?userId={Uri.EscapeDataString(userId)}&token={Uri.EscapeDataString(token)}";
     }
 
-    private AuthResponse CreateResponse(IdentityUser user)
+    private AuthResponse CreateResponse(ApplicationUser user)
     {
         var expiresAt = DateTime.UtcNow.AddHours(8);
         var claims = new[]
@@ -185,9 +199,27 @@ public class AuthController(
         var token = new JwtSecurityToken(configuration["Jwt:Issuer"], configuration["Jwt:Audience"], claims, expires: expiresAt, signingCredentials: credentials);
         return new AuthResponse(new JwtSecurityTokenHandler().WriteToken(token), expiresAt, user.Email ?? string.Empty);
     }
+
+    private async Task<string> CreateUniqueUsernameAsync(string firstName, string surname)
+    {
+        var initial = char.ToUpperInvariant(firstName.First(char.IsLetterOrDigit));
+        var cleanedSurname = Regex.Replace(surname, @"[^\p{L}\p{Nd}]", string.Empty);
+        var baseUsername = $"{initial}{cleanedSurname}";
+
+        for (var suffix = 1; ; suffix++)
+        {
+            var candidate = suffix == 1 ? baseUsername : $"{baseUsername}{suffix}";
+            if (await users.FindByNameAsync(candidate) is null)
+                return candidate;
+        }
+    }
 }
 
-public sealed record RegisterRequest([Required, EmailAddress] string Email, [Required, MinLength(8)] string Password);
+public sealed record RegisterRequest(
+    [Required, StringLength(100)] string FirstName,
+    [Required, StringLength(100)] string Surname,
+    [Required, EmailAddress] string Email,
+    [Required, MinLength(8)] string Password);
 public sealed record LoginRequest([Required, EmailAddress] string Email, [Required] string Password);
 public sealed record EmailRequest([Required, EmailAddress] string Email);
 public sealed record VerifyEmailCodeRequest([Required, EmailAddress] string Email, [Required, RegularExpression("^[0-9]{6}$")] string Code);

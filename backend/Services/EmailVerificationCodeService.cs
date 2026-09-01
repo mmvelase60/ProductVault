@@ -3,19 +3,20 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Options;
+using ProductVault.Models;
 
 namespace ProductVault.Services;
 
 public sealed class EmailVerificationCodeService(
-    UserManager<IdentityUser> users,
-    IPasswordHasher<IdentityUser> passwordHasher,
+    UserManager<ApplicationUser> users,
+    IPasswordHasher<ApplicationUser> passwordHasher,
     IOptions<EmailOptions> options) : IEmailVerificationCodeService
 {
     private const string Provider = "ProductVault.EmailVerification";
     private const string Name = "VerificationCode";
     private const int MaximumAttempts = 5;
 
-    public async Task<string> CreateAsync(IdentityUser user, CancellationToken cancellationToken = default)
+    public async Task<string> CreateAsync(ApplicationUser user, CancellationToken cancellationToken = default)
     {
         var code = RandomNumberGenerator.GetInt32(100_000, 1_000_000).ToString(CultureInfo.InvariantCulture);
         var token = new VerificationCodeToken(
@@ -26,7 +27,7 @@ public sealed class EmailVerificationCodeService(
         return code;
     }
 
-    public async Task<EmailVerificationCodeResult> VerifyAsync(IdentityUser user, string code, CancellationToken cancellationToken = default)
+    public async Task<EmailVerificationCodeResult> VerifyAsync(ApplicationUser user, string code, CancellationToken cancellationToken = default)
     {
         var value = await users.GetAuthenticationTokenAsync(user, Provider, Name);
         var token = Deserialize(value);

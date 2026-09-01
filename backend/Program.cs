@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Prometheus;
 using ProductVault.Data;
+using ProductVault.Models;
 using ProductVault.Services;
 using System.Text;
 
@@ -21,7 +22,7 @@ public class Program
             options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 0)), mysql => mysql.EnableRetryOnFailure()));
         builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-        builder.Services.AddIdentityCore<IdentityUser>(options =>
+        builder.Services.AddIdentityCore<ApplicationUser>(options =>
         {
             options.SignIn.RequireConfirmedAccount = false;
             options.SignIn.RequireConfirmedEmail = true;

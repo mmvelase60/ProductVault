@@ -1,11 +1,12 @@
 using Microsoft.AspNetCore.Identity;
+using ProductVault.Models;
 
 namespace ProductVault.Services;
 
 public interface IEmailVerificationCodeService
 {
-    Task<string> CreateAsync(IdentityUser user, CancellationToken cancellationToken = default);
-    Task<EmailVerificationCodeResult> VerifyAsync(IdentityUser user, string code, CancellationToken cancellationToken = default);
+    Task<string> CreateAsync(ApplicationUser user, CancellationToken cancellationToken = default);
+    Task<EmailVerificationCodeResult> VerifyAsync(ApplicationUser user, string code, CancellationToken cancellationToken = default);
 }
 
 public enum EmailVerificationCodeResult

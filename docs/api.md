@@ -21,14 +21,19 @@ Swagger is available at `/swagger` while the API runs in Development. Every prot
 | POST | `/auth/reset-password` | Reset a password using the user ID and token from the email link. |
 
 ```json
-{ "email": "user@example.com", "password": "Password1" }
+{
+  "firstName": "Mthokozisi",
+  "surname": "Mvelase",
+  "email": "user@example.com",
+  "password": "Password1"
+}
 ```
 
 ```json
 { "email": "user@example.com", "code": "123456" }
 ```
 
-Registration returns `202 Accepted` after sending the verification code. Codes are single-use, expire after 10 minutes, and are invalidated after five incorrect attempts. Login returns `accessToken`, `expiresAt`, and `email` only after the email is verified. Password-recovery and resend endpoints return a generic success message so callers cannot use them to enumerate accounts.
+Registration generates a username from the uppercase first-name initial and surname (`Mthokozisi Mvelase` becomes `MMvelase`), adding a numeric suffix only when needed for uniqueness. It returns `202 Accepted` after sending the verification code. Codes are single-use, expire after 10 minutes, and are invalidated after five incorrect attempts. Login returns `accessToken`, `expiresAt`, and `email` only after the email is verified. Password-recovery and resend endpoints return a generic success message so callers cannot use them to enumerate accounts.
 
 ## Dashboard
 

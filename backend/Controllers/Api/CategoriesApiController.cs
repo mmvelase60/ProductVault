@@ -1,15 +1,15 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using ProductVault.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProductVault.Data;
 using ProductVault.Monitoring;
-using ProductVault.Models;
 
 namespace ProductVault.Controllers.Api;
 
 [ApiController, Authorize, Route("api/categories")]
-public class CategoriesApiController(ApplicationDbContext db, UserManager<IdentityUser> users) : ControllerBase
+public class CategoriesApiController(ApplicationDbContext db, UserManager<ApplicationUser> users) : ControllerBase
 {
     private string UserId => users.GetUserId(User)!;
 

@@ -138,3 +138,29 @@ VALUES ('20260829104814_InitialMySql', '8.0.13');
 
 COMMIT;
 
+START TRANSACTION;
+
+ALTER TABLE `AspNetUserTokens` MODIFY COLUMN `Name` varchar(255) CHARACTER SET utf8mb4 NOT NULL;
+
+ALTER TABLE `AspNetUserTokens` MODIFY COLUMN `LoginProvider` varchar(255) CHARACTER SET utf8mb4 NOT NULL;
+
+ALTER TABLE `AspNetUserLogins` MODIFY COLUMN `ProviderKey` varchar(255) CHARACTER SET utf8mb4 NOT NULL;
+
+ALTER TABLE `AspNetUserLogins` MODIFY COLUMN `LoginProvider` varchar(255) CHARACTER SET utf8mb4 NOT NULL;
+
+INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
+VALUES ('20260830163102_AlignIdentityKeyColumnLengths', '8.0.13');
+
+COMMIT;
+
+START TRANSACTION;
+
+ALTER TABLE `AspNetUsers` ADD `FirstName` varchar(100) CHARACTER SET utf8mb4 NULL;
+
+ALTER TABLE `AspNetUsers` ADD `Surname` varchar(100) CHARACTER SET utf8mb4 NULL;
+
+INSERT INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`)
+VALUES ('20260901084750_AddApplicationUserProfile', '8.0.13');
+
+COMMIT;
+

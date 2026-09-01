@@ -10,6 +10,9 @@ erDiagram
 
     AspNetUsers {
         string Id PK
+        string FirstName
+        string Surname
+        string UserName
         string Email
         string PasswordHash
     }
@@ -46,7 +49,7 @@ erDiagram
 
 | Table | Purpose | Important constraints |
 | --- | --- | --- |
-| `AspNetUsers` | ASP.NET Core Identity account store. | Identity indexes for username and email lookups. |
+| `AspNetUsers` | ASP.NET Core Identity account store, including optional profile names for existing accounts. | Identity indexes for username and email lookups; new registrations generate `UserName` from first-name initial plus surname. |
 | `Categories` | Private category catalogue for each user. | Unique `(OwnerId, CategoryCode)` index; `RowVersion` for concurrency. |
 | `Products` | Private product catalogue for each user. | Unique `ProductCode`; FK to `Categories`; `RowVersion` for concurrency. |
 | `__EFMigrationsHistory` | Tracks applied EF Core migrations. | EF Core managed. |
