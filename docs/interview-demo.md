@@ -14,6 +14,7 @@ Use this script for a focused seven-minute demonstration. It is designed to show
    dotnet test ProductVault.sln
    cd frontend
    pnpm run build
+   pnpm run test:e2e
    ```
 
 6. If demonstrating administration, configure your account as described in the [API documentation](api.md#profile-and-administration), restart the API, then sign out and back in.
@@ -32,7 +33,7 @@ Briefly show the registration page or explain the flow:
 
 > “A user registers with first name, surname, email, and password. The server generates a readable username such as `MMvelase`, sends a single-use six-digit verification code, and blocks sign-in until the email is verified.”
 
-Mention that ASP.NET Identity handles password hashing, while ProductVault's verification-code service hashes the code, expires it after ten minutes, and limits failed attempts.
+Mention that ASP.NET Identity handles password hashing, while ProductVault's verification-code service hashes the code, expires it after ten minutes, and limits failed attempts. The authentication API also uses a per-client, per-endpoint request limit so rapid repeated requests receive a clear retry response.
 
 ### 1:45–3:15 — Catalogue workflow
 
@@ -67,7 +68,7 @@ Open Swagger and the documentation index.
 
 > “I added xUnit unit tests for validation and file parsing, then HTTP-level integration tests for registration role assignment, owner isolation, stock movement, and admin protection. This exercises the real middleware, JWT, controllers, Identity, and EF Core test host.”
 
-Point out the health endpoint, local Prometheus/Grafana setup, migrations, and the [codebase guide](codebase-guide.md).
+Point out the Playwright browser checks for anonymous route protection, keyboard navigation, and mobile navigation; then show the health endpoint, local Prometheus/Grafana setup, migrations, and the [codebase guide](codebase-guide.md).
 
 ### 6:15–7:00 — Finish with trade-offs
 
