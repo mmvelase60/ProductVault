@@ -83,7 +83,9 @@ pnpm install
 pnpm start
 ```
 
-Open the localhost URL printed by Angular (normally `http://localhost:4200`), register an account, then create a category and product. An empty workspace also offers a **Load demo data** button for a ready-to-present catalogue.
+Open the localhost URL printed by Angular (normally `http://localhost:4200`), register an account, then create a category and product. The **Import catalogue** centre offers starter data for a ready-to-present catalogue.
+
+For the Catalogue Import Centre, ready-to-upload sample files are available at [`docs/sample-data/catalogue-import-sample.xlsx`](docs/sample-data/catalogue-import-sample.xlsx) and [`docs/sample-data/catalogue-import-sample.csv`](docs/sample-data/catalogue-import-sample.csv).
 
 ## API authentication
 
