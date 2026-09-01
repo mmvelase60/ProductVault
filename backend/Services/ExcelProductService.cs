@@ -30,4 +30,58 @@ public sealed class ExcelProductService : IExcelProductService
         }
         return rows;
     }
+
+    public IReadOnlyList<CatalogueImportRow> ReadCatalogue(IFormFile file)
+    {
+        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (extension == ".xlsx")
+        {
+            using var stream = file.OpenReadStream(); using var workbook = new XLWorkbook(stream);
+            var sheet = workbook.Worksheets.FirstOrDefault() ?? throw new InvalidOperationException("The workbook contains no worksheet.");
+            return ReadCatalogueRows(sheet.RowsUsed().Select(row => Enumerable.Range(1, 6).Select(column => row.Cell(column).GetString()).ToArray()));
+        }
+
+        if (extension == ".csv")
+        {
+            using var reader = new StreamReader(file.OpenReadStream());
+            var lines = new List<string[]>(); string? line;
+            while ((line = reader.ReadLine()) is not null) lines.Add(ParseCsvLine(line).ToArray());
+            return ReadCatalogueRows(lines);
+        }
+
+        throw new InvalidOperationException("Choose a CSV or Excel (.xlsx) catalogue file.");
+    }
+
+    private static IReadOnlyList<CatalogueImportRow> ReadCatalogueRows(IEnumerable<string[]> source)
+    {
+        var rows = source.ToList();
+        var headers = new[] { "Category Name", "Category Code", "Category Active", "Product Name", "Description", "Price" };
+        if (rows.Count == 0 || rows[0].Length < headers.Length || !headers.Select((header, index) => string.Equals(header, rows[0][index].Trim(), StringComparison.OrdinalIgnoreCase)).All(valid => valid))
+            throw new InvalidOperationException("Use these columns: Category Name, Category Code, Category Active, Product Name, Description, Price.");
+
+        var result = new List<CatalogueImportRow>();
+        foreach (var row in rows.Skip(1))
+        {
+            if (row.All(string.IsNullOrWhiteSpace)) continue;
+            if (row.Length < headers.Length) throw new InvalidOperationException("Each import row must contain all six columns.");
+            if (!decimal.TryParse(row[5], System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var price)) throw new InvalidOperationException("Each Price value must be a number using a decimal point.");
+            if (!bool.TryParse(row[2], out var active)) throw new InvalidOperationException("Category Active must be true or false.");
+            result.Add(new CatalogueImportRow(row[0].Trim(), row[1].Trim().ToUpperInvariant(), active, row[3].Trim(), string.IsNullOrWhiteSpace(row[4]) ? null : row[4].Trim(), price));
+        }
+        return result;
+    }
+
+    private static IEnumerable<string> ParseCsvLine(string line)
+    {
+        var value = new System.Text.StringBuilder(); var quoted = false;
+        for (var index = 0; index < line.Length; index++)
+        {
+            if (line[index] == '"' && index + 1 < line.Length && line[index + 1] == '"') { value.Append('"'); index++; }
+            else if (line[index] == '"') quoted = !quoted;
+            else if (line[index] == ',' && !quoted) { yield return value.ToString(); value.Clear(); }
+            else value.Append(line[index]);
+        }
+        if (quoted) throw new InvalidOperationException("The CSV contains an unclosed quoted value.");
+        yield return value.ToString();
+    }
 }

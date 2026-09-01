@@ -9,6 +9,8 @@ export class ApiService {
   constructor(private readonly http: HttpClient) {}
   dashboard(): Observable<Dashboard> { return this.http.get<Dashboard>(`${apiUrl}/dashboard`); }
   seedDemoData(): Observable<{ message: string }> { return this.http.post<{ message: string }>(`${apiUrl}/dashboard/demo-data`, {}); }
+  importCatalogue(file: File): Observable<{ categoriesCreated: number; productsCreated: number; productsSkipped: number }> { const body = new FormData(); body.append('file', file); return this.http.post<{ categoriesCreated: number; productsCreated: number; productsSkipped: number }>(`${apiUrl}/catalogue-imports/file`, body); }
+  catalogueTemplate(): Observable<Blob> { return this.http.get(`${apiUrl}/catalogue-imports/template`, { responseType: 'blob' }); }
   categories(): Observable<Category[]> { return this.http.get<Category[]>(`${apiUrl}/categories`); }
   createCategory(input: { name: string; categoryCode: string; isActive: boolean }): Observable<Category> { return this.http.post<Category>(`${apiUrl}/categories`, input); }
   updateCategory(category: Category): Observable<void> { return this.http.put<void>(`${apiUrl}/categories/${category.categoryId}`, category); }

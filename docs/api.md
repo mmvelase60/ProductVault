@@ -41,6 +41,15 @@ Registration generates a username from the uppercase first-name initial and surn
 
 `POST /dashboard/demo-data` creates three categories and five sample products in the caller's empty workspace. It returns `409 Conflict` once that workspace contains catalogue data, preventing duplicate sample records.
 
+## Catalogue import
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| POST | `/catalogue-imports/file` | Import up to 500 category/product rows from a `.csv` or `.xlsx` file. |
+| GET | `/catalogue-imports/template` | Download the CSV template for the import contract. |
+
+The shared columns are `Category Name`, `Category Code`, `Category Active`, `Product Name`, `Description`, and `Price`. Missing categories are created first, products use server-generated codes, and duplicate product-name/category pairs are skipped. This authenticated endpoint is the integration boundary for a future supplier, ERP, or POS adapter.
+
 ## Categories
 
 | Method | Path | Purpose |

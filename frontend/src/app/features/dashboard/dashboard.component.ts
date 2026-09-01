@@ -15,9 +15,7 @@ import { Dashboard } from '../../core/models';
         <p>Keep your catalogue accurate, organised, and ready to share.</p>
       </div>
       <div class="actions">
-        <button *ngIf="canLoadDemoData" class="button secondary" type="button" [disabled]="seeding" (click)="loadDemoData()">
-          {{ seeding ? 'Loading demo…' : 'Load demo data' }}
-        </button>
+        <a class="button secondary" routerLink="/catalogue-import">Import catalogue</a>
         <a class="button secondary" routerLink="/categories">Add category</a>
         <a class="button" routerLink="/products">Add product</a>
       </div>

@@ -9,6 +9,7 @@ import { ResendConfirmationComponent } from './features/auth/resend-confirmation
 import { DashboardComponent } from './features/dashboard/dashboard.component';
 import { CategoriesComponent } from './features/categories/categories.component';
 import { ProductsComponent } from './features/products/products.component';
+import { CatalogueImportComponent } from './features/catalogue-import/catalogue-import.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -20,6 +21,7 @@ export const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
   { path: 'categories', component: CategoriesComponent, canActivate: [authGuard] },
   { path: 'products', component: ProductsComponent, canActivate: [authGuard] },
+  { path: 'catalogue-import', component: CatalogueImportComponent, canActivate: [authGuard] },
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
   { path: '**', redirectTo: 'dashboard' }
 ];
