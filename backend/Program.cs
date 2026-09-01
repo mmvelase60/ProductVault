@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Prometheus;
@@ -7,6 +8,7 @@ using ProductVault.Data;
 using ProductVault.Models;
 using ProductVault.Services;
 using System.Text;
+using System.Threading.RateLimiting;
 
 namespace ProductVault;
 
@@ -54,6 +56,35 @@ public class Program
                 };
             });
         builder.Services.AddAuthorization();
+        builder.Services.AddProblemDetails(options =>
+        {
+            options.CustomizeProblemDetails = context =>
+                context.ProblemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+        });
+        var authRequestLimit = builder.Configuration.GetValue("RateLimiting:AuthPermitLimit", 5);
+        builder.Services.AddRateLimiter(options =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            options.AddPolicy("auth", context => RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: $"{context.Connection.RemoteIpAddress?.ToString() ?? "unknown"}:{context.Request.Path.Value}",
+                factory: _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = authRequestLimit,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueLimit = 0,
+                    AutoReplenishment = true
+                }));
+            options.OnRejected = async (context, cancellationToken) =>
+            {
+                context.HttpContext.Response.ContentType = "application/problem+json";
+                await Results.Problem(
+                    statusCode: StatusCodes.Status429TooManyRequests,
+                    title: "Too many requests",
+                    detail: "Too many authentication attempts were made. Wait one minute, then try again.",
+                    type: "https://httpstatuses.com/429")
+                    .ExecuteAsync(context.HttpContext);
+            };
+        });
         var configuredCorsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
         builder.Services.AddCors(options => options.AddPolicy("angular", policy =>
         {
@@ -91,9 +122,9 @@ public class Program
             await scope.ServiceProvider.GetRequiredService<RoleBootstrapper>().InitialiseAsync();
 
         // Configure the HTTP request pipeline.
+        app.UseExceptionHandler();
         if (!app.Environment.IsDevelopment())
         {
-            app.UseExceptionHandler("/Home/Error");
             // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
             app.UseHsts();
         }
@@ -104,6 +135,7 @@ public class Program
         app.UseRouting();
         app.UseCors("angular");
         app.UseHttpMetrics(options => options.ReduceStatusCodeCardinality());
+        app.UseRateLimiter();
 
         app.UseAuthentication();
         app.UseAuthorization();

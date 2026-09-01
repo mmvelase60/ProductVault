@@ -14,7 +14,7 @@ import { AuthService } from '../../core/auth.service';
         <h1>Reset your password</h1>
         <p>Enter the email address associated with your ProductVault account.</p>
         <label>Email<input type="email" [(ngModel)]="email" name="email" autocomplete="email" required autofocus></label>
-        <p class="notice" role="status" *ngIf="message">{{ message }}</p>
+        <p class="notice" role="status" aria-live="polite" *ngIf="message">{{ message }}</p>
         <p class="error" role="alert" *ngIf="error">{{ error }}</p>
         <button class="button" type="submit" [disabled]="forgotForm.invalid || loading">{{ loading ? 'Sending…' : 'Send reset link' }}</button>
         <p class="muted"><a routerLink="/login">Back to sign in</a></p>

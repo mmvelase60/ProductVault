@@ -14,7 +14,7 @@ import { AuthService } from '../../core/auth.service';
         <h1>Resend verification code</h1>
         <p>Enter your email address and we will send a new verification code if it is needed.</p>
         <label>Email<input type="email" [(ngModel)]="email" name="email" autocomplete="email" required autofocus></label>
-        <p class="notice" role="status" *ngIf="message">{{ message }}</p>
+        <p class="notice" role="status" aria-live="polite" *ngIf="message">{{ message }}</p>
         <p class="error" role="alert" *ngIf="error">{{ error }}</p>
         <button class="button" type="submit" [disabled]="resendForm.invalid || loading">{{ loading ? 'Sending…' : 'Resend code' }}</button>
         <p class="muted"><a routerLink="/login">Back to sign in</a></p>

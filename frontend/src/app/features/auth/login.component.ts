@@ -13,10 +13,10 @@ import { AuthService } from '../../core/auth.service';
         <span class="eyebrow">Welcome back</span>
         <h1>Sign in to ProductVault</h1>
         <p>Manage your private product catalogue.</p>
-        <label>Email<input type="email" [(ngModel)]="email" name="email" autocomplete="email" required autofocus></label>
+        <label>Email<input type="email" [(ngModel)]="email" name="email" autocomplete="email" required></label>
         <label>Password<input type="password" [(ngModel)]="password" name="password" autocomplete="current-password" required minlength="8"></label>
         <p class="error" role="alert" *ngIf="error">{{ error }}</p>
-        <p class="notice" role="status" *ngIf="notice">{{ notice }}</p>
+        <p class="notice" role="status" aria-live="polite" *ngIf="notice">{{ notice }}</p>
         <button class="button" type="submit" [disabled]="loginForm.invalid || loading">{{ loading ? 'Signing in…' : 'Sign in' }}</button>
         <p class="muted"><a routerLink="/forgot-password">Forgot your password?</a></p>
         <p class="muted" *ngIf="confirmationRequired"><a routerLink="/resend-confirmation" [queryParams]="{ email }">Resend verification code</a></p>

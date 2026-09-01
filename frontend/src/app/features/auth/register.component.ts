@@ -13,7 +13,7 @@ import { AuthService } from '../../core/auth.service';
         <span class="eyebrow">Private workspace</span>
         <h1>Create your account</h1>
         <p>Start managing categories and products securely.</p>
-        <label>First name<input type="text" [(ngModel)]="firstName" name="firstName" autocomplete="given-name" required autofocus></label>
+        <label>First name<input type="text" [(ngModel)]="firstName" name="firstName" autocomplete="given-name" required></label>
         <label>Surname<input type="text" [(ngModel)]="surname" name="surname" autocomplete="family-name" required></label>
         <label>Email<input type="email" [(ngModel)]="email" name="email" autocomplete="email" required></label>
         <label>Password<input type="password" [(ngModel)]="password" name="password" autocomplete="new-password" required minlength="8"><small>At least 8 characters.</small></label>

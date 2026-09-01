@@ -35,6 +35,8 @@ Swagger is available at `/swagger` while the API runs in Development. Every prot
 
 Registration generates a username from the uppercase first-name initial and surname (`Mthokozisi Mvelase` becomes `MMvelase`), adding a numeric suffix only when needed for uniqueness. It returns `202 Accepted` after sending the verification code. Codes are single-use, expire after 10 minutes, and are invalidated after five incorrect attempts. Login returns `accessToken`, `expiresAt`, `email`, and the caller's `roles` only after the email is verified. Password-recovery and resend endpoints return a generic success message so callers cannot use them to enumerate accounts.
 
+Authentication endpoints use a fixed-window limit of five requests per minute per client and endpoint. A rejected request returns `429 Too Many Requests` with an RFC 7807 problem-details body, allowing the Angular client to give a clear retry message. Unhandled server failures also use problem-details responses with a trace identifier for support and diagnostics.
+
 ## Profile and administration
 
 | Method | Path | Purpose |

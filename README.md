@@ -17,7 +17,7 @@ Every product and category belongs to its authenticated owner. The API enforces 
 - Responsive Angular UI with an accessible mobile navigation, touch-friendly controls, and scroll-safe catalogue tables.
 - Product CRUD, stock and reorder thresholds, low-stock filtering, immutable stock-movement history, 10-item paging, searching, category filtering, sorting, optimistic concurrency, and a CSV/Excel catalogue import centre.
 - Product image upload plus Excel import (up to 500 records) and export.
-- Profile management, `User`/`Admin` Identity roles, MySQL-backed audit history, HTTP integration tests, health checks, Prometheus metrics, Grafana dashboard, xUnit tests, and GitHub Actions CI.
+- Profile management, `User`/`Admin` Identity roles, MySQL-backed audit history, browser-level Playwright checks, HTTP integration tests, authentication rate limiting, health checks, Prometheus metrics, Grafana dashboard, xUnit tests, and GitHub Actions CI.
 
 ## Repository layout
 
@@ -106,6 +106,7 @@ Protected API routes include `/api/dashboard`, `/api/categories`, and `/api/prod
 dotnet build ProductVault.sln
 dotnet test ProductVault.sln
 cd frontend; pnpm run build
+cd frontend; pnpm run test:e2e
 ```
 
 ## Local monitoring

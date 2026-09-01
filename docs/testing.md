@@ -1,6 +1,6 @@
 # Testing and coverage
 
-ProductVault uses xUnit for fast business-rule tests and ASP.NET Core's test host for HTTP-level integration tests. The test project is included in `ProductVault.sln` and runs in the GitHub Actions pipeline.
+ProductVault uses xUnit for fast business-rule tests, ASP.NET Core's test host for HTTP-level integration tests, and Playwright for browser-level UI checks. The .NET test project is included in `ProductVault.sln` and runs in the GitHub Actions pipeline.
 
 ## Current automated coverage
 
@@ -11,6 +11,7 @@ ProductVault uses xUnit for fast business-rule tests and ASP.NET Core's test hos
 | Excel import reader | 2 | Verifies expected columns and preserves invalid rows for an import error report. |
 | Inventory and audit | 5 | Verifies inventory validation and owner-scoped audit recording. |
 | API integration | 4 | Exercises registration/roles, owner isolation, stock movements, and admin authorization through the real HTTP pipeline. |
+| Browser end-to-end | 3 × 2 viewports | Exercises anonymous route protection, keyboard skip navigation, registration navigation, and the responsive account menu in Chromium and a Pixel-sized viewport. |
 | **Total** | **19** | Focused unit and integration tests of high-value business rules and security boundaries. |
 
 ## Run tests
@@ -18,6 +19,19 @@ ProductVault uses xUnit for fast business-rule tests and ASP.NET Core's test hos
 ```powershell
 dotnet test ProductVault.sln
 ```
+
+## Run browser-level checks
+
+The Playwright suite starts Angular on a dedicated local port and stubs the narrow API responses needed for navigation checks. This keeps browser tests deterministic while HTTP integration tests continue to cover the real API pipeline.
+
+```powershell
+cd frontend
+pnpm install
+pnpm exec playwright install chromium
+pnpm run test:e2e
+```
+
+Use `PLAYWRIGHT_BASE_URL` to target an already-running frontend instead of starting a test server.
 
 ## Generate a coverage report
 

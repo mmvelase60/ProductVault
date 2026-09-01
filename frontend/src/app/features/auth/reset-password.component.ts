@@ -15,7 +15,7 @@ import { AuthService } from '../../core/auth.service';
         <p>Use at least 8 characters and avoid reusing a password from another service.</p>
         <label>New password<input type="password" [(ngModel)]="password" name="password" autocomplete="new-password" required minlength="8"></label>
         <label>Confirm password<input type="password" [(ngModel)]="confirmation" name="confirmation" autocomplete="new-password" required minlength="8"></label>
-        <p class="notice" role="status" *ngIf="message">{{ message }}</p>
+        <p class="notice" role="status" aria-live="polite" *ngIf="message">{{ message }}</p>
         <p class="error" role="alert" *ngIf="error">{{ error }}</p>
         <button class="button" type="submit" [disabled]="resetForm.invalid || loading || !!message">{{ loading ? 'Resetting…' : 'Reset password' }}</button>
         <p class="muted" *ngIf="message"><a routerLink="/login">Go to sign in</a></p>

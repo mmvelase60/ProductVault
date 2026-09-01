@@ -10,7 +10,7 @@ import { Profile } from '../../core/models';
   imports: [FormsModule, NgFor, NgIf],
   template: `
     <section class="heading"><div><span class="eyebrow">Account settings</span><h1>Your profile</h1><p>Manage your identity and keep your workspace access secure.</p></div></section>
-    <p class="notice" role="status" *ngIf="message">{{ message }}</p><p class="error" role="alert" *ngIf="error">{{ error }}</p>
+    <p class="notice" role="status" aria-live="polite" *ngIf="message">{{ message }}</p><p class="error" role="alert" *ngIf="error">{{ error }}</p>
     <section class="split-layout" *ngIf="profile">
       <form class="card form-card" #profileForm="ngForm" (ngSubmit)="saveProfile()">
         <span class="eyebrow">Personal details</span><h2>{{ profile.email }}</h2>

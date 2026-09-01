@@ -16,7 +16,7 @@ import { AuthService } from '../../core/auth.service';
         <label>
           Verification code
           <input type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}"
-                 [(ngModel)]="code" (ngModelChange)="formatCode()" name="code" required autofocus>
+                 [(ngModel)]="code" (ngModelChange)="formatCode()" name="code" required>
           <small>The code expires after 10 minutes.</small>
         </label>
         <p class="error" role="alert" *ngIf="error">{{ error }}</p>

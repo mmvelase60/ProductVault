@@ -8,7 +8,7 @@ import { ApiService } from '../../core/api.service';
   imports: [NgIf, NgFor, RouterLink],
   template: `
     <section class="heading"><div><span class="eyebrow">Integration hub</span><h1>Import catalogue</h1><p>Bring categories and products in from a trusted file source or starter provider.</p></div><div class="actions"><a class="button secondary" routerLink="/products">View products</a></div></section>
-    <p class="notice" *ngIf="message">{{ message }}</p><p class="error" role="alert" *ngIf="error">{{ error }}</p>
+    <p class="notice" role="status" aria-live="polite" *ngIf="message">{{ message }}</p><p class="error" role="alert" *ngIf="error">{{ error }}</p>
     <section class="split-layout">
       <article class="card form-card"><span class="eyebrow">Starter provider</span><h2>Load demo catalogue</h2><p class="muted">Simulates a trusted source importing three categories and five products into an empty workspace.</p><button class="button" type="button" [disabled]="seeding" (click)="seed()">{{ seeding ? 'Loading…' : 'Load starter data' }}</button></article>
       <article class="card form-card"><span class="eyebrow">File import</span><h2>CSV or Excel</h2><p class="muted">One file can create categories and products together. Maximum 500 rows.</p><input type="file" accept=".csv,.xlsx" aria-label="Choose CSV or Excel catalogue file" (change)="select($event)"><p class="muted">Columns: Category Name, Category Code, Category Active, Product Name, Description, Price.</p><div class="actions"><button class="button" type="button" [disabled]="!file || importing" (click)="import()">{{ importing ? 'Importing…' : 'Import catalogue' }}</button><button class="button secondary" type="button" (click)="downloadTemplate()">CSV template</button></div></article>

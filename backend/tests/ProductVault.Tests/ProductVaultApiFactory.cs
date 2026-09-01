@@ -25,7 +25,8 @@ public sealed class ProductVaultApiFactory : WebApplicationFactory<Program>
             ["ConnectionStrings:DefaultConnection"] = "Server=unused;Database=productvault-tests;",
             ["Jwt:Key"] = "testing-key-that-is-long-enough-for-jwt-signing-123456",
             ["Jwt:Issuer"] = "ProductVault.Api",
-            ["Jwt:Audience"] = "ProductVault.Angular"
+            ["Jwt:Audience"] = "ProductVault.Angular",
+            ["RateLimiting:AuthPermitLimit"] = "100"
         }));
         builder.ConfigureServices(services =>
         {

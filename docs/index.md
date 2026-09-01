@@ -6,6 +6,7 @@
 - [API reference](api.md)
 - [Database schema](database-schema.md)
 - [Testing and coverage](testing.md)
+- [Browser end-to-end test suite](testing.md#run-browser-level-checks)
 - [Manual acceptance test plan](acceptance-testing.md)
 - [Security design](security.md)
 - [Requirements traceability matrix](requirements-traceability.md)

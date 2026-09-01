@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Options;
 using ProductVault.Services;
@@ -14,6 +15,7 @@ namespace ProductVault.Controllers.Api;
 
 [ApiController]
 [Route("api/auth")]
+[EnableRateLimiting("auth")]
 public class AuthController(
     UserManager<ApplicationUser> users,
     IConfiguration configuration,
