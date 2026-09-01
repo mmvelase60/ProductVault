@@ -14,4 +14,5 @@
 - [Feature roadmap](roadmap.md)
 - [Interview walkthrough](interview-walkthrough.md)
 - [Interview preparation cheat sheet](interview-prep.md)
+- [Seven-minute interview demo package](interview-demo.md)
 - [Local Prometheus and Grafana monitoring](operations-runbook.md#start-monitoring)

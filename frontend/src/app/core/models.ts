@@ -10,4 +10,6 @@ export interface Profile { firstName: string; surname: string; username: string;
 export interface AdminUser { id: string; firstName: string; surname: string; username: string; email: string; emailConfirmed: boolean; roles: string[]; }
 export interface CatalogueImportError { rowNumber: number; productName: string; message: string; }
 export interface CatalogueImportResult { categoriesCreated: number; productsCreated: number; productsSkipped: number; errors: CatalogueImportError[]; }
+export interface StockMovement { inventoryMovementId: number; operation: string; quantityBefore: number; quantityAfter: number; note?: string; occurredAt: string; }
+export interface StockUpdate { product: Product; movement: StockMovement; }
 export interface ApiError { message?: string; errors?: Record<string, string>; }

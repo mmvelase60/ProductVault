@@ -34,7 +34,8 @@ public class Program
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddSignInManager()
             .AddDefaultTokenProviders();
-        var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT signing key is not configured. Set Jwt:Key with User Secrets.");
+        var jwtKey = builder.Configuration["Jwt:Key"]
+            ?? (builder.Environment.IsEnvironment("Testing") ? "testing-key-that-is-long-enough-for-jwt-signing-123456" : throw new InvalidOperationException("JWT signing key is not configured. Set Jwt:Key with User Secrets."));
         var jwtIssuer = builder.Configuration["Jwt:Issuer"]!;
         var jwtAudience = builder.Configuration["Jwt:Audience"]!;
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

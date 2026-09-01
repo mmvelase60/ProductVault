@@ -14,6 +14,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
+    public DbSet<InventoryMovement> InventoryMovements => Set<InventoryMovement>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -44,6 +45,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<AuditEvent>(entity =>
         {
             entity.HasIndex(x => new { x.OwnerId, x.OccurredAt });
+            entity.Property(x => x.OccurredAt).HasPrecision(6);
+        });
+
+        builder.Entity<InventoryMovement>(entity =>
+        {
+            entity.HasIndex(x => new { x.OwnerId, x.ProductId, x.OccurredAt });
             entity.Property(x => x.OccurredAt).HasPrecision(6);
         });
     }

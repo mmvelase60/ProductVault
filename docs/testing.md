@@ -1,6 +1,6 @@
 # Testing and coverage
 
-ProductVault uses xUnit for fast business-rule tests. The test project is included in `ProductVault.sln` and runs in the GitHub Actions pipeline.
+ProductVault uses xUnit for fast business-rule tests and ASP.NET Core's test host for HTTP-level integration tests. The test project is included in `ProductVault.sln` and runs in the GitHub Actions pipeline.
 
 ## Current automated coverage
 
@@ -8,8 +8,10 @@ ProductVault uses xUnit for fast business-rule tests. The test project is includ
 | --- | ---: | --- |
 | Category validation | 5 | Accepts the required `AAA999` format and rejects invalid formats. |
 | Product-code generation | 3 | Covers first code, monthly sequence continuation, and new-month reset. |
-| Excel import reader | 1 | Verifies the expected import columns are read correctly. |
-| **Total** | **9** | Focused unit tests of high-value business rules. |
+| Excel import reader | 2 | Verifies expected columns and preserves invalid rows for an import error report. |
+| Inventory and audit | 5 | Verifies inventory validation and owner-scoped audit recording. |
+| API integration | 4 | Exercises registration/roles, owner isolation, stock movements, and admin authorization through the real HTTP pipeline. |
+| **Total** | **19** | Focused unit and integration tests of high-value business rules and security boundaries. |
 
 ## Run tests
 
@@ -29,7 +31,6 @@ This creates a `coverage.cobertura.xml` file beneath `TestResults`. GitHub Actio
 
 ## Recommended next test cases
 
-- Controller-level ownership tests: verify another user's IDs always return `404`.
 - Concurrency tests: verify stale `RowVersion` values show the retry message.
 - Product image validation: unsupported files and oversize images are rejected.
 - Excel import integration tests: inactive/missing category codes and invalid prices are rejected.

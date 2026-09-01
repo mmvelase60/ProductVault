@@ -9,7 +9,7 @@
 1. Register a fresh account with first name, surname, email, and password. Mention the generated username and email verification code.
 2. Sign in and show the empty, private dashboard.
 3. Open **Import catalogue**. Load starter data or upload the provided CSV/Excel sample.
-4. Show dashboard totals, then Categories and Products. Demonstrate filtering, paging, and server-generated product codes.
+4. Show dashboard totals, then Categories and Products. Demonstrate filtering, paging, low-stock indicators, server-generated product codes, and a stock movement.
 5. Open Swagger or the API documentation. Finish with GitHub Actions, tests, Prometheus/Grafana, and the architecture document.
 
 ## Points to say naturally
@@ -19,6 +19,7 @@
 - “I use database indexes and optimistic concurrency as safeguards in addition to application validation.”
 - “The Import Centre is an integration boundary, not a fake ERP integration. It supports a common file contract now and can gain a supplier-specific adapter later.”
 - “I deliberately did not add Kafka or RabbitMQ because there is no asynchronous workload that justifies operating a broker.”
+- “The stock value is quick to read from the product, while immutable movements make each quantity change explainable.”
 
 ## Before the interview
 

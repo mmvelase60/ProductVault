@@ -68,7 +68,7 @@ The API lives in `backend`. `Program.cs` is the composition root: it wires toget
 | Database history | `Data/Migrations/*` | Versioned schema changes that create and evolve the MySQL database consistently. |
 | Authentication controller | `Controllers/Api/AuthController.cs` | Registers users, creates JWT sessions, verifies six-digit email codes, resends codes, and handles forgotten-password/reset-password requests. |
 | Category controller | `Controllers/Api/CategoriesApiController.cs` | Supplies authenticated category CRUD while enforcing that a user can access only their own categories. |
-| Product controller | `Controllers/Api/ProductsApiController.cs` | Supplies authenticated product CRUD, image handling, product export, and the existing product Excel import flow. |
+| Product controller | `Controllers/Api/ProductsApiController.cs` | Supplies authenticated product CRUD, stock-movement history, image handling, product export, and the existing product Excel import flow. |
 | Dashboard controller | `Controllers/Api/DashboardApiController.cs` | Calculates dashboard totals, supplies recent products, and supports development demo data. |
 | Combined import controller | `Controllers/Api/CatalogueImportsApiController.cs` | Imports categories and products from CSV/XLSX, validates rows, creates missing categories, skips duplicates, and uses a transaction for the write workflow. |
 | Product-code service | `Services/ProductCodeGenerator.cs` | Generates unique, meaningful product codes in one reusable place. |
@@ -113,6 +113,7 @@ This is a deliberate design choice, not a missing implementation. A dedicated re
 | `categories` | Stores each user's catalogue categories, category codes, active state, audit data, and concurrency value. |
 | `products` | Stores products, prices, stock quantity, reorder level, image references, category relationship, ownership, audit data, and concurrency value. |
 | `AuditEvents` | Stores owner-scoped history for catalogue, profile, import, and password-change actions. |
+| `InventoryMovements` | Stores immutable owner-scoped stock changes with before/after quantities, an operation, note, actor, and timestamp. |
 | `__EFMigrationsHistory` | Records which EF Core migrations have been applied to the database. |
 
 The API gets the authenticated user ID from the JWT claims and filters catalogue queries by `OwnerId`. That is why one signed-in user cannot read or modify another user's products or categories merely by changing a browser URL or request ID.

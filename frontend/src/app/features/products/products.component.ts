@@ -1,14 +1,14 @@
-import { CurrencyPipe, NgFor, NgIf } from '@angular/common';
+import { CurrencyPipe, DatePipe, NgFor, NgIf } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/api.service';
 import { apiBaseUrl } from '../../core/api.config';
-import { Category, Product, ProductPage } from '../../core/models';
+import { Category, Product, ProductPage, StockMovement } from '../../core/models';
 
 @Component({
   selector: 'pv-products',
-  imports: [FormsModule, NgFor, NgIf, CurrencyPipe],
+  imports: [FormsModule, NgFor, NgIf, CurrencyPipe, DatePipe],
   template: `
     <section class="heading">
       <div>
@@ -73,6 +73,7 @@ import { Category, Product, ProductPage } from '../../core/models';
               <td class="right"><strong>{{ product.price | currency:'ZAR':'symbol-narrow' }}</strong></td>
               <td>
                 <button class="text-button" type="button" (click)="edit(product)">Edit</button>
+                <button class="text-button" type="button" (click)="openStock(product)">Stock</button>
                 <button class="text-button danger" type="button" [disabled]="deletingId === product.productId" (click)="remove(product)">
                   {{ deletingId === product.productId ? 'Deleting…' : 'Delete' }}
                 </button>
@@ -110,6 +111,18 @@ import { Category, Product, ProductPage } from '../../core/models';
           <button class="button secondary" type="button" [disabled]="saving" (click)="closeForm()">Cancel</button>
         </div>
       </form>
+
+      <form class="card form-card stock-card" *ngIf="stockProduct" #stockAdjustmentForm="ngForm" (ngSubmit)="saveStock()" [attr.aria-busy]="savingStock">
+        <span class="eyebrow">Inventory control</span><h2>{{ stockProduct.name }}</h2>
+        <p class="muted">Current quantity: <strong>{{ stockProduct.quantityInStock }}</strong>{{ stockProduct.reorderLevel > 0 ? ' · Reorder at ' + stockProduct.reorderLevel : '' }}</p>
+        <label>Action<select [(ngModel)]="stockAdjustment.operation" name="operation"><option value="receive">Receive stock</option><option value="set">Set exact quantity</option></select></label>
+        <label>{{ stockAdjustment.operation === 'receive' ? 'Quantity received' : 'New quantity' }}<input type="number" [min]="stockAdjustment.operation === 'receive' ? 1 : 0" step="1" [(ngModel)]="stockAdjustment.quantity" name="quantity" required></label>
+        <label>Note <span class="muted">(optional)</span><textarea [(ngModel)]="stockAdjustment.note" name="note" rows="2" maxlength="500" placeholder="Delivery reference or reason for adjustment"></textarea></label>
+        <p class="error" role="alert" *ngIf="stockError">{{ stockError }}</p>
+        <div class="actions"><button class="button" type="submit" [disabled]="stockAdjustmentForm.invalid || savingStock">{{ savingStock ? 'Saving…' : 'Save stock change' }}</button><button class="button secondary" type="button" [disabled]="savingStock" (click)="closeStock()">Close</button></div>
+        <div class="movement-history" *ngIf="movements.length"><h3>Recent movements</h3><div *ngFor="let movement of movements"><span class="badge">{{ movement.operation }}</span><span><strong>{{ movement.quantityBefore }} → {{ movement.quantityAfter }}</strong><small>{{ movement.note || 'No note' }}</small></span><time>{{ movement.occurredAt | date:'short' }}</time></div></div>
+        <p class="muted" *ngIf="loadingMovements">Loading stock history…</p>
+      </form>
     </section>
   `
 })
@@ -132,6 +145,12 @@ export class ProductsComponent implements OnInit {
   importing = false;
   exporting = false;
   deletingId?: number;
+  stockProduct?: Product;
+  movements: StockMovement[] = [];
+  stockAdjustment: { operation: 'receive' | 'set'; quantity: number; note: string } = { operation: 'receive', quantity: 1, note: '' };
+  stockError = '';
+  savingStock = false;
+  loadingMovements = false;
   form = { name: '', description: '', price: 0, quantityInStock: 0, reorderLevel: 0, categoryId: 0 };
 
   constructor(private readonly api: ApiService) {}
@@ -167,6 +186,7 @@ export class ProductsComponent implements OnInit {
   }
 
   edit(product: Product): void {
+    this.closeStock();
     this.editing = product;
     this.image = undefined;
     this.form = { name: product.name, description: product.description ?? '', price: product.price, quantityInStock: product.quantityInStock, reorderLevel: product.reorderLevel, categoryId: product.categoryId };
@@ -177,6 +197,45 @@ export class ProductsComponent implements OnInit {
   closeForm(): void {
     this.showForm = false;
     this.formError = '';
+  }
+
+  openStock(product: Product): void {
+    this.showForm = false;
+    this.stockProduct = product;
+    this.stockAdjustment = { operation: 'receive', quantity: 1, note: '' };
+    this.stockError = '';
+    this.movements = [];
+    this.loadingMovements = true;
+    this.api.stockMovements(product.productId).subscribe({
+      next: movements => { this.movements = movements; this.loadingMovements = false; },
+      error: response => { this.loadingMovements = false; this.stockError = response.error?.message ?? 'Stock history could not be loaded.'; }
+    });
+  }
+
+  closeStock(): void {
+    this.stockProduct = undefined;
+    this.movements = [];
+    this.stockError = '';
+  }
+
+  saveStock(): void {
+    if (!this.stockProduct || this.savingStock || (this.stockAdjustment.operation === 'receive' && this.stockAdjustment.quantity <= 0) || (this.stockAdjustment.operation === 'set' && this.stockAdjustment.quantity < 0)) {
+      this.stockError = 'Enter a valid quantity for the selected action.';
+      return;
+    }
+    this.savingStock = true;
+    this.stockError = '';
+    this.api.adjustStock(this.stockProduct.productId, { ...this.stockAdjustment, rowVersion: this.stockProduct.rowVersion }).subscribe({
+      next: result => {
+        this.savingStock = false;
+        this.stockProduct = result.product;
+        this.movements = [result.movement, ...this.movements];
+        if (this.page) this.page = { ...this.page, items: this.page.items.map(product => product.productId === result.product.productId ? result.product : product) };
+        this.message = `Stock updated: ${result.movement.quantityBefore} → ${result.movement.quantityAfter}.`;
+        this.stockAdjustment = { operation: 'receive', quantity: 1, note: '' };
+      },
+      error: response => { this.savingStock = false; this.stockError = response.error?.message ?? 'Stock could not be updated.'; }
+    });
   }
 
   selectImage(event: Event): void { this.image = (event.target as HTMLInputElement).files?.[0]; }

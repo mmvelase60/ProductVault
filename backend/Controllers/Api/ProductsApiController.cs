@@ -49,6 +49,8 @@ public class ProductsApiController(ApplicationDbContext db, UserManager<Applicat
             product = new Product { Name = request.Name.Trim(), Description = request.Description?.Trim(), Price = request.Price, QuantityInStock = request.QuantityInStock, ReorderLevel = request.ReorderLevel, CategoryId = category.CategoryId, ProductCode = await codes.NextAsync(DateTime.UtcNow), OwnerId = UserId, CreatedBy = UserId, CreatedDate = DateTime.UtcNow };
             db.Products.Add(product);
             await db.SaveChangesAsync();
+            if (product.QuantityInStock > 0)
+                db.InventoryMovements.Add(new InventoryMovement { OwnerId = UserId, ProductId = product.ProductId, ProductName = product.Name, Operation = "Initialised", QuantityBefore = 0, QuantityAfter = product.QuantityInStock, Note = "Initial stock at product creation.", PerformedBy = UserId, OccurredAt = DateTime.UtcNow });
             audit.Record(UserId, UserId, "Created", "Product", product.ProductId.ToString(), product.Name);
             await db.SaveChangesAsync();
             await transaction.CommitAsync();
@@ -66,8 +68,11 @@ public class ProductsApiController(ApplicationDbContext db, UserManager<Applicat
         if (string.IsNullOrWhiteSpace(request.RowVersion)) return BadRequest(new { message = "The product version is required." });
         try
         {
+            var previousQuantity = product.QuantityInStock;
             product.Name = request.Name.Trim(); product.Description = request.Description?.Trim(); product.Price = request.Price; product.QuantityInStock = request.QuantityInStock; product.ReorderLevel = request.ReorderLevel; product.CategoryId = category.CategoryId; product.UpdatedBy = UserId; product.UpdatedDate = DateTime.UtcNow;
             db.Entry(product).Property(item => item.RowVersion).OriginalValue = Convert.FromBase64String(request.RowVersion);
+            if (previousQuantity != product.QuantityInStock)
+                db.InventoryMovements.Add(new InventoryMovement { OwnerId = UserId, ProductId = product.ProductId, ProductName = product.Name, Operation = "Adjusted", QuantityBefore = previousQuantity, QuantityAfter = product.QuantityInStock, Note = "Stock changed while editing the product.", PerformedBy = UserId, OccurredAt = DateTime.UtcNow });
             audit.Record(UserId, UserId, "Updated", "Product", product.ProductId.ToString(), product.Name);
             await db.SaveChangesAsync();
             return NoContent();
@@ -79,6 +84,46 @@ public class ProductsApiController(ApplicationDbContext db, UserManager<Applicat
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     { var product = await db.Products.SingleOrDefaultAsync(p => p.ProductId == id && p.OwnerId == UserId); if (product is null) return NotFound(); var image = product.ImagePath; audit.Record(UserId, UserId, "Deleted", "Product", product.ProductId.ToString(), product.Name); db.Products.Remove(product); await db.SaveChangesAsync(); DeleteImage(image); ProductVaultMetrics.ProductsDeleted.Inc(); return NoContent(); }
+
+    [HttpGet("{id:int}/stock-movements")]
+    public async Task<ActionResult<IReadOnlyList<StockMovementResponse>>> StockMovements(int id)
+    {
+        if (!await db.Products.AnyAsync(product => product.ProductId == id && product.OwnerId == UserId)) return NotFound();
+        var movements = await db.InventoryMovements.AsNoTracking().Where(item => item.ProductId == id && item.OwnerId == UserId)
+            .OrderByDescending(item => item.OccurredAt).Take(15)
+            .Select(item => new StockMovementResponse(item.InventoryMovementId, item.Operation, item.QuantityBefore, item.QuantityAfter, item.Note, item.OccurredAt))
+            .ToListAsync();
+        return Ok(movements);
+    }
+
+    [HttpPost("{id:int}/stock-movements")]
+    public async Task<ActionResult<StockUpdateResponse>> AdjustStock(int id, StockAdjustmentRequest request)
+    {
+        var operation = request.Operation.Trim().ToLowerInvariant();
+        if (operation is not "receive" and not "set") return BadRequest(new { message = "Operation must be receive or set." });
+        if ((operation == "receive" && request.Quantity <= 0) || (operation == "set" && request.Quantity < 0)) return BadRequest(new { message = "Receive requires a positive quantity; set requires a non-negative quantity." });
+        if (string.IsNullOrWhiteSpace(request.RowVersion)) return BadRequest(new { message = "The product version is required." });
+
+        var product = await db.Products.Include(item => item.Category).SingleOrDefaultAsync(item => item.ProductId == id && item.OwnerId == UserId);
+        if (product is null) return NotFound();
+        try
+        {
+            var previousQuantity = product.QuantityInStock;
+            var nextQuantity = operation == "receive" ? checked(previousQuantity + request.Quantity) : request.Quantity;
+            product.QuantityInStock = nextQuantity;
+            product.UpdatedBy = UserId;
+            product.UpdatedDate = DateTime.UtcNow;
+            db.Entry(product).Property(item => item.RowVersion).OriginalValue = Convert.FromBase64String(request.RowVersion);
+            var movement = new InventoryMovement { OwnerId = UserId, ProductId = product.ProductId, ProductName = product.Name, Operation = operation == "receive" ? "Received" : "Adjusted", QuantityBefore = previousQuantity, QuantityAfter = nextQuantity, Note = string.IsNullOrWhiteSpace(request.Note) ? null : request.Note.Trim(), PerformedBy = UserId, OccurredAt = DateTime.UtcNow };
+            db.InventoryMovements.Add(movement);
+            audit.Record(UserId, UserId, movement.Operation, "Stock", product.ProductId.ToString(), product.Name, $"{previousQuantity} → {nextQuantity}");
+            await db.SaveChangesAsync();
+            return Ok(new StockUpdateResponse(ToResponse(product, product.Category!.Name), new StockMovementResponse(movement.InventoryMovementId, movement.Operation, movement.QuantityBefore, movement.QuantityAfter, movement.Note, movement.OccurredAt)));
+        }
+        catch (OverflowException) { return BadRequest(new { message = "The resulting quantity is too large." }); }
+        catch (FormatException) { return BadRequest(new { message = "The product version is invalid." }); }
+        catch (DbUpdateConcurrencyException) { return Conflict(new { message = "This product changed in another session. Refresh and try again." }); }
+    }
 
     [HttpPost("{id:int}/image")]
     public async Task<ActionResult<ProductResponse>> UploadImage(int id, IFormFile? file)
@@ -170,3 +215,6 @@ public sealed record ProductResponse(int ProductId, string ProductCode, string N
     public bool IsLowStock => ReorderLevel > 0 && QuantityInStock <= ReorderLevel;
 }
 public sealed record ProductPageResponse(IReadOnlyList<ProductResponse> Items, int Page, int PageSize, int TotalCount);
+public sealed record StockAdjustmentRequest(string Operation, int Quantity, string? Note, string? RowVersion);
+public sealed record StockMovementResponse(long InventoryMovementId, string Operation, int QuantityBefore, int QuantityAfter, string? Note, DateTime OccurredAt);
+public sealed record StockUpdateResponse(ProductResponse Product, StockMovementResponse Movement);

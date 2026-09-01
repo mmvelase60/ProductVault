@@ -80,10 +80,14 @@ Category codes are normalized to uppercase and must match `AAA999`. Updates incl
 | PUT | `/products/{id}` | Update owned product with `rowVersion`. |
 | DELETE | `/products/{id}` | Delete owned product. |
 | POST | `/products/{id}/image` | Upload one product image as multipart form field `file`. |
+| GET | `/products/{id}/stock-movements` | List the 15 most recent owner-scoped stock movements. |
+| POST | `/products/{id}/stock-movements` | Receive stock or set an exact quantity using the current `rowVersion`. |
 | POST | `/products/import` | Import a `.xlsx` workbook as multipart form field `file`. |
 | GET | `/products/export` | Download owned products as `.xlsx`. |
 
 Product list sorting supports `newest`, `name`, `price-asc`, `price-desc`, and `code`. A product has non-negative `quantityInStock` and `reorderLevel` values. A product is low stock when its reorder level is above zero and the quantity is less than or equal to it.
+
+Stock movement requests use `operation` (`receive` or `set`), `quantity`, optional `note`, and the product `rowVersion`. Each accepted movement stores before/after quantities and writes an audit record. A stale version receives `409 Conflict`, so inventory changes are not silently overwritten.
 
 ## Response conventions
 
