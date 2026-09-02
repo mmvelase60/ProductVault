@@ -425,6 +425,15 @@ autom4te.cache/
 tarballs/
 test-results/
 
+# Personal architecture notes and interview preparation material.
+# These remain available locally but are intentionally not shared with the repository.
+docs/adr/
+docs/codebase-guide.md
+docs/interview-demo.md
+docs/interview-prep.md
+docs/interview-rehearsal.md
+docs/interview-walkthrough.md
+
 # Mac bundle stuff
 *.dmg
 *.app

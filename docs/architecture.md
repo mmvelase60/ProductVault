@@ -47,4 +47,4 @@ flowchart TB
 4. EF Core persists the change to MySQL. Category and product writes include a row version so stale edits fail with `409 Conflict` rather than overwriting a later change.
 5. The API returns a typed JSON response; the component refreshes or updates its local view state.
 
-`ApplicationDbContext` is deliberately used as the data-access boundary. The reasoning for not adding a generic repository wrapper is documented in the [codebase guide](codebase-guide.md#4-repository-and-database-access).
+`ApplicationDbContext` is deliberately used as the data-access boundary. EF Core already supplies the repository-like access and unit-of-work behaviour needed by this application; a generic wrapper would add an abstraction without simplifying a repeated query or business rule.

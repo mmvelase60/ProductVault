@@ -11,21 +11,12 @@ This folder documents the current implementation of ProductVault. It is written 
 
 ## Engineering reference
 
-- [Frontend, backend, and database guide](codebase-guide.md)
 - [Design and workflow diagrams](design.md)
 - [Security design](security.md)
 - [Testing and coverage](testing.md)
 - [Manual acceptance test plan](acceptance-testing.md)
-- [Architecture decision records](adr/README.md)
 - [Requirements traceability](requirements-traceability.md)
 - [Feature roadmap](roadmap.md)
-
-## Optional presentation notes
-
-- [Project walkthrough](interview-walkthrough.md)
-- [Short demo plan](interview-demo.md)
-- [Preparation notes](interview-prep.md)
-- [Rehearsal guide](interview-rehearsal.md)
 
 ## Supporting material
 
