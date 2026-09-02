@@ -33,7 +33,7 @@ import { Category } from '../../core/models';
               <td><code>{{ category.categoryCode }}</code></td>
               <td>{{ category.productCount }}</td>
               <td><span [class]="category.isActive ? 'badge active' : 'badge'">{{ category.isActive ? 'Active' : 'Inactive' }}</span></td>
-              <td><button class="text-button" type="button" (click)="edit(category)">Edit</button></td>
+              <td class="actions-cell"><div class="icon-actions"><button class="icon-button" type="button" (click)="edit(category)" aria-label="Edit {{ category.name }}" title="Edit category"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg></button></div></td>
             </tr>
           </tbody>
         </table>

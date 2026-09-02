@@ -73,12 +73,19 @@ import { Category, Product, ProductPage, StockMovement } from '../../core/models
               <td><span class="badge">{{ product.categoryName }}</span></td>
               <td><span [class]="product.isLowStock ? 'badge warning' : 'badge'">{{ product.quantityInStock }}{{ product.reorderLevel > 0 ? ' / min ' + product.reorderLevel : '' }}</span></td>
               <td class="right"><strong>{{ product.price | currency:'ZAR':'symbol-narrow' }}</strong></td>
-              <td>
-                <button class="text-button" type="button" (click)="edit(product)">Edit</button>
-                <button class="text-button" type="button" (click)="openStock(product)">Stock</button>
-                <button class="text-button danger" type="button" [disabled]="deletingId === product.productId" (click)="remove(product)">
-                  {{ deletingId === product.productId ? 'Deleting…' : 'Delete' }}
-                </button>
+              <td class="actions-cell">
+                <div class="icon-actions">
+                  <button class="icon-button" type="button" (click)="edit(product)" aria-label="Edit {{ product.name }}" title="Edit product">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"></path><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path></svg>
+                  </button>
+                  <button class="icon-button" type="button" (click)="openStock(product)" aria-label="Manage stock for {{ product.name }}" title="Manage stock">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 16-9 5-9-5"></path><path d="m21 12-9 5-9-5"></path><path d="m21 8-9 5-9-5 9-5 9 5Z"></path></svg>
+                  </button>
+                  <button class="icon-button danger" type="button" [disabled]="deletingId === product.productId" (click)="remove(product)" aria-label="Delete {{ product.name }}" title="Delete product">
+                    <svg *ngIf="deletingId !== product.productId" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"></path><path d="M8 6V4h8v2"></path><path d="M19 6l-1 14H6L5 6"></path><path d="M10 11v5M14 11v5"></path></svg>
+                    <span class="spinner small-spinner" *ngIf="deletingId === product.productId" aria-hidden="true"></span>
+                  </button>
+                </div>
               </td>
             </tr>
           </tbody>
