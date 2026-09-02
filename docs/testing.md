@@ -11,7 +11,7 @@ ProductVault uses xUnit for fast business-rule tests, ASP.NET Core's test host f
 | Excel import reader | 2 | Verifies expected columns and preserves invalid rows for an import error report. |
 | Inventory and audit | 5 | Verifies inventory validation and owner-scoped audit recording. |
 | API integration | 4 | Exercises registration/roles, owner isolation, stock movements, and admin authorization through the real HTTP pipeline. |
-| Browser end-to-end | 3 × 2 viewports | Exercises anonymous route protection, keyboard skip navigation, registration navigation, and the responsive account menu in Chromium and a Pixel-sized viewport. |
+| Browser end-to-end | 4 × 2 viewports | Exercises anonymous route protection, keyboard skip navigation, registration navigation, responsive account navigation, and initial catalogue-data rendering in Chromium and a Pixel-sized viewport. |
 | **Total** | **19** | Focused unit and integration tests of high-value business rules and security boundaries. |
 
 ## Run tests

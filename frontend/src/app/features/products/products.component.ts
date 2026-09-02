@@ -1,6 +1,6 @@
 import { CurrencyPipe, DatePipe, NgFor, NgIf } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/api.service';
 import { apiBaseUrl } from '../../core/api.config';
@@ -153,7 +153,7 @@ export class ProductsComponent implements OnInit {
   loadingMovements = false;
   form = { name: '', description: '', price: 0, quantityInStock: 0, reorderLevel: 0, categoryId: 0 };
 
-  constructor(private readonly api: ApiService) {}
+  constructor(private readonly api: ApiService, private readonly changeDetector: ChangeDetectorRef) {}
 
   get productCount(): number { return this.page?.totalCount ?? 0; }
   get totalPages(): number { return this.page ? Math.max(1, Math.ceil(this.page.totalCount / this.page.pageSize)) : 1; }
@@ -161,8 +161,14 @@ export class ProductsComponent implements OnInit {
 
   ngOnInit(): void {
     this.api.categories().subscribe({
-      next: categories => this.categories = categories,
-      error: () => this.error = 'Categories could not be loaded.'
+      next: categories => {
+        this.categories = categories;
+        this.changeDetector.detectChanges();
+      },
+      error: () => {
+        this.error = 'Categories could not be loaded.';
+        this.changeDetector.detectChanges();
+      }
     });
     this.load(1);
   }
@@ -170,8 +176,14 @@ export class ProductsComponent implements OnInit {
   load(page: number): void {
     this.error = '';
     this.api.products({ page, search: this.search, categoryId: this.categoryId, lowStock: this.lowStock, sort: this.sort }).subscribe({
-      next: result => this.page = result,
-      error: response => this.error = response.error?.message ?? 'Products could not be loaded.'
+      next: result => {
+        this.page = result;
+        this.changeDetector.detectChanges();
+      },
+      error: response => {
+        this.error = response.error?.message ?? 'Products could not be loaded.';
+        this.changeDetector.detectChanges();
+      }
     });
   }
 

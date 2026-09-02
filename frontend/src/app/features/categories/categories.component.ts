@@ -1,6 +1,6 @@
 import { NgFor, NgIf } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/api.service';
 import { Category } from '../../core/models';
@@ -62,14 +62,20 @@ export class CategoriesComponent implements OnInit {
   saving = false;
   form = { name: '', categoryCode: '', isActive: true };
 
-  constructor(private readonly api: ApiService) {}
+  constructor(private readonly api: ApiService, private readonly changeDetector: ChangeDetectorRef) {}
 
   ngOnInit(): void { this.load(); }
 
   load(): void {
     this.api.categories().subscribe({
-      next: result => this.categories = result,
-      error: () => this.error = 'Categories could not be loaded.'
+      next: result => {
+        this.categories = result;
+        this.changeDetector.detectChanges();
+      },
+      error: () => {
+        this.error = 'Categories could not be loaded.';
+        this.changeDetector.detectChanges();
+      }
     });
   }
 

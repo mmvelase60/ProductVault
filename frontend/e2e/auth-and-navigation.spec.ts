@@ -45,3 +45,30 @@ test.describe('responsive navigation', () => {
     await expect(page.getByRole('button', { name: 'Sign out' })).toBeVisible();
   });
 });
+
+test.describe('catalogue data rendering', () => {
+  test('renders categories and products as soon as their API responses arrive', async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem('productvault-session', JSON.stringify({
+      accessToken: 'test-token',
+      expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+      email: 'candidate@example.com',
+      roles: ['User']
+    })));
+    await page.route('**/api/categories', async route => route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify([{ categoryId: 1, name: 'Cleaning material', categoryCode: 'CLE001', isActive: true, productCount: 1, rowVersion: 'AQ==' }])
+    }));
+    await page.route('**/api/products?**', async route => route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({ items: [{ productId: 1, productCode: '202609-001', name: 'Handy andy', description: 'Cleaning product', price: 57.99, quantityInStock: 5, reorderLevel: 0, isLowStock: false, categoryId: 1, categoryName: 'Cleaning material', rowVersion: 'AQ==' }], page: 1, pageSize: 10, totalCount: 1 })
+    }));
+
+    await page.goto('/products');
+    await expect(page.getByText('1 product in your private workspace.')).toBeVisible();
+    await expect(page.getByRole('cell', { name: 'Handy andy' })).toBeVisible();
+    await expect(page.getByRole('combobox', { name: 'Filter by category' })).toContainText('Cleaning material');
+
+    await page.goto('/categories');
+    await expect(page.getByRole('cell', { name: 'Cleaning material' })).toBeVisible();
+  });
+});

@@ -24,7 +24,7 @@ Use this guide to practise explaining ProductVault clearly in an intermediate so
 | Inventory | Product quantity is quick to display; immutable stock movements explain every receive or adjustment. |
 | Concurrency | Product/category updates carry a MySQL row version. Stale writes return a conflict instead of overwriting someone else’s change. |
 | Resilience | Authentication is limited to five requests per minute per client and endpoint; errors use problem-details responses with a trace ID. |
-| Quality | 19 .NET unit/integration tests and 6 Playwright checks currently pass. |
+| Quality | 19 .NET unit/integration tests and 8 Playwright checks currently pass. |
 | Scope | No live supplier/ERP yet. The Import Centre is the prepared integration boundary, not a claim of a finished external integration. |
 
 ## Seven-minute rehearsal

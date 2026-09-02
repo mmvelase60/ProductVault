@@ -17,7 +17,7 @@ export default defineConfig({
   webServer: process.env['PLAYWRIGHT_BASE_URL'] ? undefined : {
     command: 'pnpm exec ng serve --host 127.0.0.1 --port 4300',
     url: 'http://127.0.0.1:4300/login',
-    reuseExistingServer: !process.env['CI'],
+    reuseExistingServer: false,
     timeout: 120_000
   }
 });
