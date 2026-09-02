@@ -25,6 +25,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         {
             entity.Property(x => x.FirstName).HasMaxLength(100);
             entity.Property(x => x.Surname).HasMaxLength(100);
+            entity.HasIndex(x => x.NormalizedEmail).HasDatabaseName("EmailIndex").IsUnique();
         });
 
         builder.Entity<Category>(entity =>
