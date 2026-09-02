@@ -21,7 +21,7 @@ import { Category } from '../../core/models';
     <p class="notice" role="status" aria-live="polite" *ngIf="message">{{ message }}</p>
     <p class="error" role="alert" *ngIf="error && !showForm">{{ error }}</p>
 
-    <section class="split-layout">
+    <section class="split-layout" [class.single-column]="!showForm">
       <section class="card table-card" [attr.aria-busy]="loading">
         <div class="loading-state" role="status" aria-live="polite" *ngIf="loading"><span class="spinner" aria-hidden="true"></span><span>Loading categories…</span></div>
         <ng-container *ngIf="!loading">

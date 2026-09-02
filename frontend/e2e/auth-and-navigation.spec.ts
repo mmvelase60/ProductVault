@@ -12,6 +12,13 @@ async function mockSessionRefresh(page: import('@playwright/test').Page): Promis
   }));
 }
 
+async function tableUsesFullLayoutWidth(page: import('@playwright/test').Page, layoutSelector: string): Promise<boolean> {
+  return page.locator(`${layoutSelector} > .table-card`).evaluate(card => {
+    const layout = card.parentElement;
+    return layout !== null && Math.abs(card.getBoundingClientRect().width - layout.getBoundingClientRect().width) <= 2;
+  });
+}
+
 test.describe('authentication and navigation', () => {
   test('redirects anonymous visitors to sign in and provides a keyboard skip link', async ({ page }) => {
     await page.goto('/dashboard');
@@ -100,8 +107,10 @@ test.describe('catalogue data rendering', () => {
     await expect(page.getByText('1 product in your private workspace.')).toBeVisible();
     await expect(page.getByRole('cell', { name: 'Handy andy' })).toBeVisible();
     await expect(page.getByRole('combobox', { name: 'Filter by category' })).toContainText('Cleaning material');
+    expect(await tableUsesFullLayoutWidth(page, '.products-layout')).toBeTruthy();
 
     await page.goto('/categories');
     await expect(page.getByRole('cell', { name: 'Cleaning material' })).toBeVisible();
+    expect(await tableUsesFullLayoutWidth(page, '.split-layout')).toBeTruthy();
   });
 });

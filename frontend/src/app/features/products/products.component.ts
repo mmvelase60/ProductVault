@@ -54,7 +54,7 @@ import { Category, Product, ProductPage, StockMovement } from '../../core/models
     <p class="notice" role="status" aria-live="polite" *ngIf="message">{{ message }}</p>
     <p class="error" role="alert" *ngIf="error">{{ error }}</p>
 
-    <section class="split-layout products-layout">
+    <section class="split-layout products-layout" [class.single-column]="!showForm && !stockProduct">
       <section class="card table-card" [attr.aria-busy]="loading">
         <div class="loading-state" role="status" aria-live="polite" *ngIf="loading"><span class="spinner" aria-hidden="true"></span><span>Loading products…</span></div>
         <ng-container *ngIf="!loading">
