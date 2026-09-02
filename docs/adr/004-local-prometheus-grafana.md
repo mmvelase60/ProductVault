@@ -6,7 +6,7 @@
 
 Expose development-only Prometheus metrics and provide Prometheus/Grafana through Docker Compose.
 
-## Rationale
+## Context
 
 This adds practical observability without cloud cost or a deployment dependency. It gives useful visibility into HTTP health and catalogue activity during demos and development.
 

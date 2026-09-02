@@ -1,5 +1,11 @@
 # Local operations runbook
 
+## Before you start
+
+- .NET 8 SDK, Node.js 24+ with pnpm, MySQL 8, and (only for monitoring) Docker Desktop are installed.
+- The MySQL connection string, JWT signing key, and SMTP credentials are stored with .NET User Secrets as described in the root [README](../README.md#2-configure-local-secrets).
+- Run commands from the repository root unless a step changes directory.
+
 ## Start the application
 
 1. Configure your MySQL password with User Secrets using `backend/ProductVault.csproj`, then run `dotnet ef database update` from the `backend` folder if the database has not yet been created.
@@ -27,6 +33,10 @@ Expected local endpoints:
 | Swagger (Development only) | `https://localhost:7253/swagger` |
 | Health check | `https://localhost:7253/health` |
 | Metrics (Development only) | `https://localhost:7253/metrics` |
+
+## Smoke test
+
+After both processes start, open the Angular URL and register a test account. Verify the email code, sign in, create a category with a valid code such as `ACC001`, and create one product. The dashboard and product list should update without a browser console error. This confirms the browser, API, Identity, MySQL, and CORS configuration are working together.
 
 ## Start monitoring
 

@@ -1,6 +1,6 @@
 # ProductVault codebase and integration guide
 
-This guide explains what each major part of ProductVault does and how a browser action becomes a database change. It is intended to be readable by a recruiter, interviewer, or a developer joining the project.
+This guide maps the main parts of ProductVault and follows a browser action through to a database change. It is a practical orientation document for anyone reviewing or extending the codebase.
 
 ## 1. System at a glance
 
@@ -179,8 +179,11 @@ The Import Centre also presents a future integration endpoint. This makes the cu
 
 Secrets such as database passwords, JWT signing keys, and SMTP app passwords must never be committed to the repository. Local setup is documented in the [operations runbook](operations-runbook.md).
 
-## 7. Suggested explanation in an interview
+## 7. Design notes
 
-> “ProductVault is an Angular and ASP.NET Core modular monolith. Angular components call focused client services; a JWT interceptor adds a short-lived in-memory access token, a rotating HttpOnly cookie restores sessions, and a route guard protects private pages. ASP.NET Core controllers are the secure HTTP boundary, while focused services handle reusable workflows such as email-code verification, refresh-token rotation, spreadsheet parsing, and product-code generation. Entity Framework Core’s `ApplicationDbContext` provides the repository and unit-of-work behavior for MySQL, with every catalogue query scoped to the authenticated owner. That gives the project clear boundaries without adding unnecessary repository boilerplate.”
+- Angular components own presentation state; `AuthService` and `ApiService` own API communication and session state.
+- Controllers remain the HTTP boundary. Spreadsheet parsing, verification-code handling, refresh-token rotation, auditing, and product-code generation are services because they are reusable workflows.
+- `ApplicationDbContext` provides the repository-like and unit-of-work capabilities needed at this scale. A generic repository would add another abstraction without simplifying an existing repeated query.
+- Owner scoping happens on the server, before a catalogue record is read or changed. The browser does not submit an owner ID.
 
-For a concise feature-by-feature presentation, see the [interview walkthrough](interview-walkthrough.md) and [interview preparation cheat sheet](interview-prep.md).
+For the surrounding design decisions, use [architecture.md](architecture.md), [security.md](security.md), and the [ADRs](adr/README.md).

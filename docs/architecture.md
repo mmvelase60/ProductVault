@@ -1,6 +1,6 @@
 # Architecture
 
-ProductVault is a modular monolith following a practical N-tier structure. The application is intentionally kept as one deployable unit because the requirements are centred on secure CRUD, not independently scaling services.
+ProductVault is a modular monolith with a separate Angular client and ASP.NET Core API. It is one deployable business application with explicit presentation, HTTP, application, and persistence boundaries. That keeps the solution straightforward to run while avoiding the coupling that would come from putting browser, security, and database concerns in one layer.
 
 ![ProductVault component architecture](diagrams/productvault-architecture.svg)
 
@@ -38,3 +38,13 @@ flowchart TB
 - **Database constraints as safeguards:** indexes protect category-code and product-code uniqueness even if application logic is bypassed.
 - **Retry-safe writes:** serializable product and import transactions execute through EF Core's MySQL retry strategy, so transient database failures do not bypass the write workflow.
 - **Local-first monitoring:** `/metrics` is only mapped in Development; Grafana and Prometheus run through Docker Compose.
+
+## Request lifecycle
+
+1. An Angular component calls `AuthService` or `ApiService`; the interceptor attaches the current short-lived bearer token when one is available.
+2. ASP.NET Core validates the token and the controller derives the caller from its claims. Client input never decides an `OwnerId`.
+3. The controller either delegates reusable work to a focused service or performs a small owner-scoped EF Core query.
+4. EF Core persists the change to MySQL. Category and product writes include a row version so stale edits fail with `409 Conflict` rather than overwriting a later change.
+5. The API returns a typed JSON response; the component refreshes or updates its local view state.
+
+`ApplicationDbContext` is deliberately used as the data-access boundary. The reasoning for not adding a generic repository wrapper is documented in the [codebase guide](codebase-guide.md#4-repository-and-database-access).

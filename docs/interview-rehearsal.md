@@ -4,7 +4,7 @@ Use this guide to practise explaining ProductVault clearly in an intermediate so
 
 ## The project in 30 seconds
 
-> “ProductVault is a private catalogue-management application for products and categories. I built the user interface in Angular and a separate ASP.NET Core API backed by MySQL. The important part is that security and ownership are enforced on the API: Angular holds a short-lived JWT only in memory, restores the session through a rotating HttpOnly cookie, and every catalogue operation derives the owner from the validated token. I added email-code verification, imports, inventory history, role-based administration, tests, monitoring, and documentation to show how I approach a production-minded CRUD application.”
+> “ProductVault is a private catalogue-management application for products and categories. The user interface is Angular and the API is ASP.NET Core backed by MySQL. Security and ownership are enforced by the API: Angular holds a short-lived JWT in memory, restores a session through a rotating HttpOnly cookie, and each catalogue operation derives the owner from the validated token. The application also includes email verification, imports, inventory history, role-based administration, tests, monitoring, and documentation.”
 
 ## The project in 90 seconds
 
@@ -69,7 +69,7 @@ Use the detailed [demo package](interview-demo.md) as your script. Rehearse this
 
 “For the next production increment I would add a background email queue and a source-specific ERP adapter once the external system’s contract is known. I would not build those speculatively because they introduce operational decisions that need real requirements.”
 
-## Recruiter-friendly explanation
+## Plain-language explanation
 
 If the interviewer is less technical, say:
 

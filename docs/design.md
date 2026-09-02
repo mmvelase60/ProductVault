@@ -51,4 +51,6 @@ flowchart LR
 
 ## Responsive design
 
-The Angular UI uses fluid page spacing and typography, a mobile navigation menu, and 44px minimum interactive targets. Dashboard metrics collapse from three columns to one on smaller screens; filters and forms reflow into single-column controls; and catalogue tables retain every column through touch-friendly horizontal scrolling instead of hiding actions or data. Loading, saving, importing, exporting, and deleting states disable the relevant action and provide clear feedback to prevent duplicate requests.
+The Angular UI uses fluid page spacing and typography, a mobile navigation menu, and 44px minimum interactive targets. Dashboard metrics collapse from three columns to one on smaller screens; filters and forms reflow into single-column controls; and catalogue tables retain every column through touch-friendly horizontal scrolling instead of hiding actions or data.
+
+Product, category, and stock editors open in focused dialogs so the catalogue table keeps its full available width. Product deletion uses an application confirmation dialog rather than a browser `confirm()` prompt. The destructive action is named explicitly, Cancel receives the initial focus, and clicking outside the dialog or pressing Escape cancels the operation. Loading, saving, importing, exporting, and deleting states disable the relevant action to avoid duplicate requests.

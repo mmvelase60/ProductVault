@@ -6,9 +6,9 @@
 
 Build ProductVault as one ASP.NET Core API with clear controller, service, domain, and infrastructure boundaries, consumed by a separate Angular SPA.
 
-## Rationale
+## Context
 
-The assignment requires a secure CRUD system, not independently deployed services. A modular monolith is simpler to run, debug, test, and explain while preserving separation of concerns.
+ProductVault has one core business workflow: users manage a private catalogue. There is no independent scaling requirement, separate deployment cadence, or team boundary that requires distributed services. A modular monolith is simpler to run, debug, and test while retaining separation of concerns.
 
 ## Consequence
 

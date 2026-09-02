@@ -6,9 +6,9 @@
 
 Use MySQL 8.0 for development with Entity Framework Core migrations through the Pomelo provider.
 
-## Rationale
+## Context
 
-MySQL is one of the assignment's approved databases and is the development database the project owner uses daily. The Pomelo provider supports ASP.NET Core Identity, decimal money fields, MySQL timestamp-backed concurrency tokens, and EF Core migrations.
+The local development environment uses MySQL 8. The Pomelo provider supports ASP.NET Core Identity, decimal money fields, MySQL timestamp-backed concurrency tokens, and EF Core migrations, so it fits the application without a custom persistence layer.
 
 ## Consequence
 

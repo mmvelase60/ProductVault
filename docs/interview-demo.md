@@ -85,7 +85,7 @@ If a live feature is slow or unavailable during the demo:
 
 ## Likely interviewer questions
 
-| Question | Strong short answer |
+| Question | Concise answer |
 | --- | --- |
 | How do you prevent users from seeing each other's catalogue? | The API gets the user ID from the validated JWT and adds an `OwnerId` filter to every catalogue query and mutation. |
 | Why store stock movements separately? | The current quantity is fast to display, while immutable movements give explainability and a reliable audit history. |

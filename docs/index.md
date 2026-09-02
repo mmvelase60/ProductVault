@@ -1,22 +1,35 @@
-# ProductVault technical documentation
+# ProductVault documentation
 
-- [Architecture](architecture.md)
-- [Architecture component diagram (SVG)](diagrams/productvault-architecture.svg)
-- [Codebase and frontend/backend integration guide](codebase-guide.md)
-- [Design diagrams](design.md)
+This folder documents the current implementation of ProductVault. It is written for someone running, reviewing, or extending the application; the source code remains the final authority when behaviour changes.
+
+## Start here
+
+- [Local setup and troubleshooting](operations-runbook.md)
+- [Architecture](architecture.md) and [component diagram](diagrams/productvault-architecture.svg)
 - [API reference](api.md)
-- [Database schema](database-schema.md)
-- [Entity relationship diagram (SVG)](diagrams/productvault-erd.svg)
-- [Testing and coverage](testing.md)
-- [Browser end-to-end test suite](testing.md#run-browser-level-checks)
-- [Manual acceptance test plan](acceptance-testing.md)
+- [Database schema](database-schema.md) and [ERD](diagrams/productvault-erd.svg)
+
+## Engineering reference
+
+- [Frontend, backend, and database guide](codebase-guide.md)
+- [Design and workflow diagrams](design.md)
 - [Security design](security.md)
-- [Requirements traceability matrix](requirements-traceability.md)
-- [Local operations runbook](operations-runbook.md)
-- [Architecture Decision Records](adr/README.md)
+- [Testing and coverage](testing.md)
+- [Manual acceptance test plan](acceptance-testing.md)
+- [Architecture decision records](adr/README.md)
+- [Requirements traceability](requirements-traceability.md)
 - [Feature roadmap](roadmap.md)
-- [Interview walkthrough](interview-walkthrough.md)
-- [Interview preparation cheat sheet](interview-prep.md)
-- [Seven-minute interview demo package](interview-demo.md)
-- [Interview rehearsal guide and question bank](interview-rehearsal.md)
-- [Local Prometheus and Grafana monitoring](operations-runbook.md#start-monitoring)
+
+## Optional presentation notes
+
+- [Project walkthrough](interview-walkthrough.md)
+- [Short demo plan](interview-demo.md)
+- [Preparation notes](interview-prep.md)
+- [Rehearsal guide](interview-rehearsal.md)
+
+## Supporting material
+
+- [Sample import data](sample-data/)
+- [Product-list screenshot](screenshots/product-list.png)
+
+Last documentation review: 2 September 2026.

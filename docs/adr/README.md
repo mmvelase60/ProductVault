@@ -1,6 +1,6 @@
 # Architecture Decision Records
 
-ADRs capture significant decisions and their reasons. They make trade-offs easy to explain in an interview.
+ADRs capture decisions that affect the structure, security, or operation of ProductVault. They record the reason for a choice and the consequence that future changes must respect.
 
 1. [ADR-001: Modular monolith](001-modular-monolith.md)
 2. [ADR-002: JWT bearer tokens for the Angular SPA](002-identity-cookies-over-jwt.md)

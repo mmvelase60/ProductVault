@@ -6,7 +6,7 @@
 
 Use ASP.NET Core Identity for account management. Issue short-lived signed JWT access tokens to the separate Angular SPA and restore browser sessions with rotating hashed refresh tokens.
 
-## Rationale
+## Context
 
 The frontend is a separately served Angular client. Bearer access tokens give the API a clear authentication boundary, make the API independently consumable, and let every controller derive the owner from trusted token claims. Keeping the access token only in memory reduces the impact of browser-storage XSS. A rotating, server-revocable refresh token provides a usable session across a page refresh without exposing that credential to JavaScript. The signing key stays in local User Secrets rather than source control.
 

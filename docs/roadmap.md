@@ -7,19 +7,20 @@
 - [x] Paging, image upload, Excel import/export
 - [x] Auditing, validation, and optimistic concurrency
 - [x] Protected API endpoints
-- [x] Unit tests, GitHub Actions CI/CD, and local monitoring
+- [x] Role-based account directory and profile management
+- [x] Downloadable import template and row-level import error report
+- [x] Unit/integration tests, GitHub Actions CI, and local monitoring
 
 ## Next release: usability and resilience
 
 - [x] Product search, sorting, and category filtering
 - [ ] Category delete/deactivate workflow with clear product-impact messaging
 - [ ] Image replacement/removal option in the edit screen
-- [ ] Downloadable Excel import template and per-row error report
-- [ ] Integration tests for authorization and concurrency paths
+- [ ] More concurrency tests around simultaneous product and stock updates
+- [ ] Product-image validation integration coverage
 
 ## Future: operational maturity
 
-- [ ] Role-based administration and account management
 - [ ] Structured logging with correlation IDs
 - [ ] Alert thresholds in Grafana for sustained errors or slow requests
 - [ ] Database health check with a dependency probe

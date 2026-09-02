@@ -6,7 +6,7 @@
 
 Do not add RabbitMQ or Kafka to the current solution.
 
-## Rationale
+## Context
 
 The application has no high-volume event stream, independent services, or long-running asynchronous workflow. Adding a broker would introduce operational complexity without meeting an active requirement.
 
