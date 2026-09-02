@@ -3,6 +3,7 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
+import { NotificationService } from '../../core/notification.service';
 
 @Component({
   selector: 'pv-forgot-password',
@@ -28,7 +29,7 @@ export class ForgotPasswordComponent {
   error = '';
   loading = false;
 
-  constructor(private readonly auth: AuthService) {}
+  constructor(private readonly auth: AuthService, private readonly notifications: NotificationService) {}
 
   submit(): void {
     if (this.loading) return;
@@ -39,10 +40,12 @@ export class ForgotPasswordComponent {
       next: result => {
         this.loading = false;
         this.message = result.message;
+        this.notifications.showDialog({ kind: 'success', title: 'Password reset request received', message: 'If a confirmed account exists for that address, a reset link has been sent. Check your inbox and Spam folder.', actionLabel: 'Continue' });
       },
       error: response => {
         this.loading = false;
         this.error = response.error?.message ?? 'The reset link could not be sent.';
+        this.notifications.showDialog({ kind: 'error', title: 'We could not send the reset link', message: `${this.error} Please try again in a moment.`, actionLabel: 'Try again' });
       }
     });
   }

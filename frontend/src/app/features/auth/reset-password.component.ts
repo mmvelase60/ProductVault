@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
+import { NotificationService } from '../../core/notification.service';
 
 @Component({
   selector: 'pv-reset-password',
@@ -32,7 +33,7 @@ export class ResetPasswordComponent implements OnInit {
   error = '';
   loading = false;
 
-  constructor(private readonly auth: AuthService, private readonly route: ActivatedRoute) {}
+  constructor(private readonly auth: AuthService, private readonly notifications: NotificationService, private readonly route: ActivatedRoute) {}
 
   ngOnInit(): void {
     this.userId = this.route.snapshot.queryParamMap.get('userId') ?? '';
@@ -53,11 +54,13 @@ export class ResetPasswordComponent implements OnInit {
       next: result => {
         this.loading = false;
         this.message = result.message;
+        this.notifications.showDialog({ kind: 'success', title: 'Password updated', message: 'Your password has been changed successfully. You can now sign in with your new password.', actionLabel: 'Continue' });
       },
       error: response => {
         this.loading = false;
         const errors = response.error?.errors;
         this.error = errors ? Object.values(errors).join(' ') : response.error?.message ?? 'This password reset link could not be used.';
+        this.notifications.showDialog({ kind: 'error', title: 'We could not reset your password', message: `${this.error} Request a new reset link and try again.`, actionLabel: 'Try again' });
       }
     });
   }

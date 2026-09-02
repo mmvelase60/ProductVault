@@ -3,6 +3,7 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
+import { NotificationService } from '../../core/notification.service';
 
 @Component({
   selector: 'pv-resend-confirmation',
@@ -28,7 +29,7 @@ export class ResendConfirmationComponent {
   error = '';
   loading = false;
 
-  constructor(private readonly auth: AuthService, route: ActivatedRoute) {
+  constructor(private readonly auth: AuthService, private readonly notifications: NotificationService, route: ActivatedRoute) {
     this.email = route.snapshot.queryParamMap.get('email') ?? '';
   }
 
@@ -41,10 +42,12 @@ export class ResendConfirmationComponent {
       next: result => {
         this.loading = false;
         this.message = result.message;
+        this.notifications.showDialog({ kind: 'success', title: 'Verification code requested', message: 'If your account still needs verification, a new six-digit code has been sent. Check your inbox and Spam folder, then enter the newest code.', actionLabel: 'Continue' });
       },
       error: response => {
         this.loading = false;
         this.error = response.error?.message ?? 'The verification code could not be sent.';
+        this.notifications.showDialog({ kind: 'error', title: 'We could not send a verification code', message: `${this.error} Check your connection and try again in a moment.`, actionLabel: 'Try again' });
       }
     });
   }

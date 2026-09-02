@@ -33,6 +33,37 @@ test.describe('authentication and navigation', () => {
     await page.getByRole('link', { name: 'Sign in' }).last().click();
     await expect(page).toHaveURL(/\/login$/);
   });
+
+  test('explains email verification success before taking the user to sign in', async ({ page }) => {
+    await page.route('**/api/auth/verify-email-code', async route => route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({ message: 'Email verified. You can now sign in.' })
+    }));
+    await page.goto('/verify-email?email=candidate@example.com');
+    await page.getByLabel('Verification code').fill('123456');
+    await page.getByRole('button', { name: 'Verify email' }).click();
+
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toContainText('Your email is verified');
+    await expect(dialog).toContainText('Your ProductVault account is ready.');
+    await dialog.getByRole('button', { name: 'Go to sign in' }).click();
+    await expect(page).toHaveURL(/\/login\?email=candidate@example\.com&verified=1$/);
+  });
+
+  test('explains email verification failure and the next action', async ({ page }) => {
+    await page.route('**/api/auth/verify-email-code', async route => route.fulfill({
+      status: 500,
+      contentType: 'application/json',
+      body: JSON.stringify({ message: 'Email verification could not be completed. Request a new code and try again.' })
+    }));
+    await page.goto('/verify-email?email=candidate@example.com');
+    await page.getByLabel('Verification code').fill('123456');
+    await page.getByRole('button', { name: 'Verify email' }).click();
+
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toContainText('We could not verify your email');
+    await expect(dialog).toContainText('Resend code');
+  });
 });
 
 test.describe('responsive navigation', () => {

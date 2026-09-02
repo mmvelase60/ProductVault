@@ -3,6 +3,7 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
+import { NotificationService } from '../../core/notification.service';
 
 @Component({
   selector: 'pv-register',
@@ -33,17 +34,21 @@ export class RegisterComponent {
   error = '';
   loading = false;
 
-  constructor(private readonly auth: AuthService, private readonly router: Router) {}
+  constructor(private readonly auth: AuthService, private readonly notifications: NotificationService, private readonly router: Router) {}
 
   submit(): void {
     if (this.loading) return;
     this.loading = true;
     this.error = '';
     this.auth.register(this.firstName, this.surname, this.email, this.password).subscribe({
-      next: () => this.router.navigate(['/verify-email'], { queryParams: { email: this.email } }),
+      next: () => {
+        void this.router.navigate(['/verify-email'], { queryParams: { email: this.email } });
+        this.notifications.showDialog({ kind: 'success', title: 'Account created', message: `We sent a six-digit verification code to ${this.email}. Enter it on the next screen to activate your account.`, actionLabel: 'Enter verification code' });
+      },
       error: response => {
         const errors = response.error?.errors;
         this.error = errors ? Object.values(errors).join(' ') : 'Registration failed.';
+        this.notifications.showDialog({ kind: 'error', title: 'We could not create your account', message: this.error, actionLabel: 'Review details' });
         this.loading = false;
       }
     });

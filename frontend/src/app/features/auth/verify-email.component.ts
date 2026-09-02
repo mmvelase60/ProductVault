@@ -3,6 +3,7 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth.service';
+import { NotificationService } from '../../core/notification.service';
 
 @Component({
   selector: 'pv-verify-email',
@@ -35,7 +36,7 @@ export class VerifyEmailComponent {
   error = '';
   loading = false;
 
-  constructor(private readonly auth: AuthService, private readonly router: Router, route: ActivatedRoute) {
+  constructor(private readonly auth: AuthService, private readonly notifications: NotificationService, private readonly router: Router, route: ActivatedRoute) {
     this.email = route.snapshot.queryParamMap.get('email') ?? '';
     if (!this.email) this.error = 'Enter your email address on the registration page, then verify the code we send.';
   }
@@ -49,9 +50,24 @@ export class VerifyEmailComponent {
     this.loading = true;
     this.error = '';
     this.auth.verifyEmailCode(this.email, this.code).subscribe({
-      next: () => this.router.navigate(['/login'], { queryParams: { email: this.email, verified: '1' } }),
+      next: () => {
+        this.loading = false;
+        this.notifications.showDialog({
+          kind: 'success',
+          title: 'Your email is verified',
+          message: 'Your ProductVault account is ready. Select “Go to sign in” and use your email address and password to continue.',
+          actionLabel: 'Go to sign in',
+          onClose: () => void this.router.navigate(['/login'], { queryParams: { email: this.email, verified: '1' } })
+        });
+      },
       error: response => {
-        this.error = response.error?.message ?? 'The verification code could not be used.';
+        this.error = response.error?.detail ?? response.error?.message ?? 'The verification code could not be used.';
+        this.notifications.showDialog({
+          kind: 'error',
+          title: 'We could not verify your email',
+          message: `${this.error} Your account is still protected. Select “Resend code” below to receive a new six-digit code, then try again.`,
+          actionLabel: 'Try again'
+        });
         this.loading = false;
       }
     });

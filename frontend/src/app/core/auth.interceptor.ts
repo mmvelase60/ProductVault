@@ -18,9 +18,9 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
         notifications.show('Your session has ended. Please sign in again.', 'info');
         void router.navigateByUrl('/login');
       } else if (response.status === 429) {
-        notifications.show(response.error?.detail ?? 'Too many attempts. Wait a minute, then try again.', 'error');
+        notifications.showDialog({ title: 'Please wait before trying again', message: response.error?.detail ?? 'Too many attempts were made. Wait one minute, then try again.', kind: 'info' });
       } else if (response.status >= 500) {
-        notifications.show(response.error?.detail ?? response.error?.message ?? 'Something went wrong on our side. Please try again.', 'error');
+        notifications.showDialog({ title: 'We could not complete that request', message: response.error?.detail ?? response.error?.message ?? 'Something went wrong on our side. Your information has not been saved. Please try again, or request a new verification code if this was an email verification.', kind: 'error' });
       }
       return throwError(() => response);
     })
