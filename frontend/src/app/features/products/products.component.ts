@@ -55,7 +55,9 @@ import { Category, Product, ProductPage, StockMovement } from '../../core/models
     <p class="error" role="alert" *ngIf="error">{{ error }}</p>
 
     <section class="split-layout products-layout">
-      <section class="card table-card">
+      <section class="card table-card" [attr.aria-busy]="loading">
+        <div class="loading-state" role="status" aria-live="polite" *ngIf="loading"><span class="spinner" aria-hidden="true"></span><span>Loading products…</span></div>
+        <ng-container *ngIf="!loading">
         <table *ngIf="page?.items?.length; else empty">
           <thead><tr><th>Product</th><th>Code</th><th>Category</th><th>Stock</th><th class="right">Price</th><th><span class="sr-only">Actions</span></th></tr></thead>
           <tbody>
@@ -89,6 +91,7 @@ import { Category, Product, ProductPage, StockMovement } from '../../core/models
           <span>Page {{ page.page }} of {{ totalPages }}</span>
           <button class="button secondary" type="button" [disabled]="page.page >= totalPages" (click)="load(page.page + 1)">Next</button>
         </div>
+        </ng-container>
       </section>
 
       <form class="card form-card" *ngIf="showForm" #productForm="ngForm" (ngSubmit)="save()" [attr.aria-busy]="saving">
@@ -140,6 +143,7 @@ export class ProductsComponent implements OnInit {
   importFile?: File;
   message = '';
   error = '';
+  loading = false;
   formError = '';
   saving = false;
   importing = false;
@@ -175,13 +179,16 @@ export class ProductsComponent implements OnInit {
 
   load(page: number): void {
     this.error = '';
+    this.loading = true;
     this.api.products({ page, search: this.search, categoryId: this.categoryId, lowStock: this.lowStock, sort: this.sort }).subscribe({
       next: result => {
         this.page = result;
+        this.loading = false;
         this.changeDetector.detectChanges();
       },
       error: response => {
         this.error = response.error?.message ?? 'Products could not be loaded.';
+        this.loading = false;
         this.changeDetector.detectChanges();
       }
     });

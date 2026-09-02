@@ -52,7 +52,7 @@ import { Dashboard } from '../../core/models';
       </section>
     </ng-container>
 
-    <ng-template #loading><p class="muted" role="status" *ngIf="!error">Loading dashboard…</p></ng-template>
+    <ng-template #loading><div class="card loading-state" role="status" aria-live="polite" *ngIf="!error"><span class="spinner" aria-hidden="true"></span><span>Loading dashboard…</span></div></ng-template>
   `
 })
 export class DashboardComponent implements OnInit {

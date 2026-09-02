@@ -1,6 +1,6 @@
 import { NgFor, NgIf } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/api.service';
 import { Profile } from '../../core/models';
@@ -11,6 +11,7 @@ import { Profile } from '../../core/models';
   template: `
     <section class="heading"><div><span class="eyebrow">Account settings</span><h1>Your profile</h1><p>Manage your identity and keep your workspace access secure.</p></div></section>
     <p class="notice" role="status" aria-live="polite" *ngIf="message">{{ message }}</p><p class="error" role="alert" *ngIf="error">{{ error }}</p>
+    <div class="card loading-state" role="status" aria-live="polite" *ngIf="loading"><span class="spinner" aria-hidden="true"></span><span>Loading profile…</span></div>
     <section class="split-layout" *ngIf="profile">
       <form class="card form-card" #profileForm="ngForm" (ngSubmit)="saveProfile()">
         <span class="eyebrow">Personal details</span><h2>{{ profile.email }}</h2>
@@ -33,8 +34,8 @@ export class ProfileComponent implements OnInit {
   profile?: Profile;
   form = { firstName: '', surname: '' };
   password = { currentPassword: '', newPassword: '' };
-  message = ''; error = ''; savingProfile = false; savingPassword = false;
-  constructor(private readonly api: ApiService) {}
+  message = ''; error = ''; loading = true; savingProfile = false; savingPassword = false;
+  constructor(private readonly api: ApiService, private readonly changeDetector: ChangeDetectorRef) {}
   ngOnInit(): void { this.load(); }
   saveProfile(): void {
     if (this.savingProfile) return;
@@ -46,6 +47,6 @@ export class ProfileComponent implements OnInit {
     this.savingPassword = true; this.error = ''; this.message = '';
     this.api.changePassword(this.password).subscribe({ next: response => { this.savingPassword = false; this.password = { currentPassword: '', newPassword: '' }; this.message = response.message; }, error: response => this.handleError(response, 'Password could not be changed.', 'password') });
   }
-  private load(): void { this.api.profile().subscribe({ next: profile => { this.profile = profile; this.form = { firstName: profile.firstName, surname: profile.surname }; }, error: () => this.error = 'Profile details could not be loaded.' }); }
+  private load(): void { this.loading = true; this.api.profile().subscribe({ next: profile => { this.profile = profile; this.form = { firstName: profile.firstName, surname: profile.surname }; this.loading = false; this.changeDetector.detectChanges(); }, error: () => { this.loading = false; this.error = 'Profile details could not be loaded.'; this.changeDetector.detectChanges(); } }); }
   private handleError(response: HttpErrorResponse, fallback: string, operation: 'profile' | 'password'): void { if (operation === 'profile') this.savingProfile = false; else this.savingPassword = false; this.error = response.error?.message ?? response.error?.errors?.profile ?? fallback; }
 }

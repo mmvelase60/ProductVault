@@ -22,7 +22,9 @@ import { Category } from '../../core/models';
     <p class="error" role="alert" *ngIf="error && !showForm">{{ error }}</p>
 
     <section class="split-layout">
-      <section class="card table-card">
+      <section class="card table-card" [attr.aria-busy]="loading">
+        <div class="loading-state" role="status" aria-live="polite" *ngIf="loading"><span class="spinner" aria-hidden="true"></span><span>Loading categories…</span></div>
+        <ng-container *ngIf="!loading">
         <table *ngIf="categories.length; else empty">
           <thead><tr><th>Category</th><th>Code</th><th>Products</th><th>Status</th><th><span class="sr-only">Actions</span></th></tr></thead>
           <tbody>
@@ -36,6 +38,7 @@ import { Category } from '../../core/models';
           </tbody>
         </table>
         <ng-template #empty><div class="empty"><h3>No categories yet</h3><p>Create your first category before adding products.</p></div></ng-template>
+        </ng-container>
       </section>
 
       <form class="card form-card" *ngIf="showForm" #categoryForm="ngForm" (ngSubmit)="save()" [attr.aria-busy]="saving">
@@ -59,6 +62,7 @@ export class CategoriesComponent implements OnInit {
   showForm = false;
   message = '';
   error = '';
+  loading = false;
   saving = false;
   form = { name: '', categoryCode: '', isActive: true };
 
@@ -67,13 +71,16 @@ export class CategoriesComponent implements OnInit {
   ngOnInit(): void { this.load(); }
 
   load(): void {
+    this.loading = true;
     this.api.categories().subscribe({
       next: result => {
         this.categories = result;
+        this.loading = false;
         this.changeDetector.detectChanges();
       },
       error: () => {
         this.error = 'Categories could not be loaded.';
+        this.loading = false;
         this.changeDetector.detectChanges();
       }
     });
