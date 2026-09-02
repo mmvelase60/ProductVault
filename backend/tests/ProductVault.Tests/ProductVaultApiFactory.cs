@@ -65,6 +65,27 @@ public sealed class ProductVaultApiFactory : WebApplicationFactory<Program>
         return (user, code);
     }
 
+    public async Task CreateLegacyDuplicateEmailAsync(string email)
+    {
+        using var scope = Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var normalisedEmail = email.ToUpperInvariant();
+        db.Users.Add(new ApplicationUser
+        {
+            Id = Guid.NewGuid().ToString(),
+            UserName = $"legacy-{Guid.NewGuid():N}",
+            NormalizedUserName = $"LEGACY-{Guid.NewGuid():N}".ToUpperInvariant(),
+            Email = email,
+            NormalizedEmail = normalisedEmail,
+            EmailConfirmed = false,
+            SecurityStamp = Guid.NewGuid().ToString(),
+            ConcurrencyStamp = Guid.NewGuid().ToString(),
+            FirstName = "Legacy",
+            Surname = "Duplicate"
+        });
+        await db.SaveChangesAsync();
+    }
+
     public async Task<HttpClient> CreateAuthenticatedClientAsync(string email, params string[] roles)
     {
         await CreateUserAsync(email, roles);

@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using Microsoft.Extensions.DependencyInjection;
+using ProductVault.Controllers.Api;
 using ProductVault.Models;
 
 namespace ProductVault.Tests;
@@ -41,6 +42,21 @@ public sealed class ApiIntegrationTests : IClassFixture<ProductVaultApiFactory>
         using var scope = factory.Services.CreateScope();
         var users = scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<ApplicationUser>>();
         Assert.True((await users.FindByIdAsync(created.User.Id))!.EmailConfirmed);
+    }
+
+    [Fact]
+    public async Task Duplicate_legacy_email_returns_a_clear_conflict_instead_of_a_server_error()
+    {
+        var email = $"duplicate-{Guid.NewGuid():N}@example.com";
+        await factory.CreateUserAsync(email, "User");
+        await factory.CreateLegacyDuplicateEmailAsync(email);
+        var client = factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
+
+        var response = await client.PostAsJsonAsync("/api/auth/resend-confirmation", new { email });
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        var message = await response.Content.ReadFromJsonAsync<MessageResponse>();
+        Assert.Contains("More than one account", message!.Message);
     }
 
     [Fact]

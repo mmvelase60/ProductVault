@@ -31,6 +31,8 @@ public class AuthController(
     IOptions<RefreshTokenOptions> tokenOptions,
     ILogger<AuthController> logger) : ControllerBase
 {
+    private const string DuplicateEmailMessage = "More than one account uses this email address. For security, sign-in and verification are unavailable until an administrator removes the duplicate unverified account.";
+
     [HttpPost("register")]
     public async Task<ActionResult<MessageResponse>> Register(RegisterRequest request)
     {
@@ -40,6 +42,9 @@ public class AuthController(
             return BadRequest(new { errors = new { Name = "First name and surname must contain letters or numbers." } });
 
         var email = request.Email.Trim();
+        if (await FindUsersByEmailAsync(email, HttpContext.RequestAborted) is { Count: > 0 })
+            return BadRequest(new { errors = new { Email = "An account already exists for this email address. Sign in, or use Forgot password if you cannot access it." } });
+
         var username = await usernameGenerator.NextAsync(firstName, surname);
         var user = new ApplicationUser
         {
@@ -72,7 +77,11 @@ public class AuthController(
     [HttpPost("login")]
     public async Task<ActionResult<AuthResponse>> Login(LoginRequest request)
     {
-        var user = await users.FindByEmailAsync(request.Email.Trim());
+        var matchingUsers = await FindUsersByEmailAsync(request.Email, HttpContext.RequestAborted);
+        if (matchingUsers.Count > 1)
+            return Conflict(new MessageResponse(DuplicateEmailMessage, "duplicate_email"));
+
+        var user = matchingUsers.SingleOrDefault();
         if (user is null || !await users.CheckPasswordAsync(user, request.Password))
             return Unauthorized(new MessageResponse("Email or password is incorrect."));
 
@@ -88,7 +97,11 @@ public class AuthController(
     [HttpPost("verify-email-code")]
     public async Task<ActionResult<MessageResponse>> VerifyEmailCode(VerifyEmailCodeRequest request)
     {
-        var user = await users.FindByEmailAsync(request.Email.Trim());
+        var matchingUsers = await FindUsersByEmailAsync(request.Email, HttpContext.RequestAborted);
+        if (matchingUsers.Count > 1)
+            return Conflict(new MessageResponse(DuplicateEmailMessage, "duplicate_email"));
+
+        var user = matchingUsers.SingleOrDefault();
         if (user is null)
             return BadRequest(new MessageResponse("The verification code is invalid or has expired."));
 
@@ -133,7 +146,11 @@ public class AuthController(
     [HttpPost("resend-confirmation")]
     public async Task<ActionResult<MessageResponse>> ResendConfirmation(EmailRequest request)
     {
-        var user = await users.FindByEmailAsync(request.Email.Trim());
+        var matchingUsers = await FindUsersByEmailAsync(request.Email, HttpContext.RequestAborted);
+        if (matchingUsers.Count > 1)
+            return Conflict(new MessageResponse(DuplicateEmailMessage, "duplicate_email"));
+
+        var user = matchingUsers.SingleOrDefault();
         if (user is not null && !user.EmailConfirmed)
         {
             try
@@ -154,7 +171,8 @@ public class AuthController(
     [HttpPost("forgot-password")]
     public async Task<ActionResult<MessageResponse>> ForgotPassword(EmailRequest request)
     {
-        var user = await users.FindByEmailAsync(request.Email.Trim());
+        var matchingUsers = await FindUsersByEmailAsync(request.Email, HttpContext.RequestAborted);
+        var user = matchingUsers.Count == 1 ? matchingUsers[0] : null;
         if (user is not null && user.EmailConfirmed)
         {
             try
@@ -226,6 +244,14 @@ public class AuthController(
         var html = $"<h1>Verify your ProductVault email</h1><p>Enter this verification code in ProductVault:</p><p style=\"font-size:28px;font-weight:700;letter-spacing:6px\">{code}</p><p>This code expires in {emailOptions.Value.VerificationCodeLifetimeMinutes} minutes. If you did not create an account, you can safely ignore this email.</p>";
         await emailSender.SendAsync(user.Email!, "Your ProductVault verification code", html,
             $"Your ProductVault verification code is {code}. It expires in {emailOptions.Value.VerificationCodeLifetimeMinutes} minutes.");
+    }
+
+    private Task<List<ApplicationUser>> FindUsersByEmailAsync(string email, CancellationToken cancellationToken)
+    {
+        var normalizedEmail = users.NormalizeEmail(email.Trim()) ?? email.Trim().ToUpperInvariant();
+        return db.Users.Where(user => user.NormalizedEmail == normalizedEmail)
+            .OrderBy(user => user.Id)
+            .ToListAsync(cancellationToken);
     }
 
     private async Task SendEmailAsync(string recipient, string subject, string heading, string link, string copy)
