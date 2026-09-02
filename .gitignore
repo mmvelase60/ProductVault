@@ -6,6 +6,9 @@
 # dotenv files
 .env
 
+# Runtime user uploads are stored locally and must not be versioned.
+backend/wwwroot/uploads/
+
 # User-specific files
 *.rsuser
 *.suo
