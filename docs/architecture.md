@@ -2,6 +2,8 @@
 
 ProductVault is a modular monolith following a practical N-tier structure. The application is intentionally kept as one deployable unit because the requirements are centred on secure CRUD, not independently scaling services.
 
+![ProductVault component architecture](diagrams/productvault-architecture.svg)
+
 ```mermaid
 flowchart TB
     Browser[Angular SPA] --> API[ASP.NET Core Web API]

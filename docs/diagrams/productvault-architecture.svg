@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="930" viewBox="0 0 1600 930" role="img" aria-labelledby="title description">
+  <title id="title">ProductVault component architecture diagram</title>
+  <desc id="description">Angular browser application communicates with ASP.NET Core API, which uses services and EF Core to manage a MySQL database, file storage, Identity, and observability.</desc>
+  <defs>
+    <linearGradient id="blue" x1="0" x2="1"><stop stop-color="#10213e"/><stop offset="1" stop-color="#2563eb"/></linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#0f172a" flood-opacity=".14"/></filter>
+    <marker id="arrow" markerWidth="11" markerHeight="11" refX="9" refY="4" orient="auto"><path d="M0,0 L0,8 L9,4 z" fill="#64748b"/></marker>
+    <style>
+      .bg{fill:#f5f7fb}.title{font:800 34px Inter,Segoe UI,sans-serif;fill:#10213e}.sub{font:500 17px Inter,Segoe UI,sans-serif;fill:#64748b}.group{fill:#eff6ff;stroke:#bfdbfe;stroke-width:1.5}.group-title{font:800 16px Inter,Segoe UI,sans-serif;fill:#1d4ed8}.box{fill:#fff;stroke:#cbd5e1;stroke-width:1.5}.boxhead{fill:url(#blue)}.box-title{font:800 19px Inter,Segoe UI,sans-serif;fill:#fff}.text{font:500 14px Inter,Segoe UI,sans-serif;fill:#334155}.small{font:500 13px Inter,Segoe UI,sans-serif;fill:#64748b}.line{stroke:#64748b;stroke-width:2.2;fill:none;marker-end:url(#arrow)}.label{font:700 13px Inter,Segoe UI,sans-serif;fill:#475569}
+    </style>
+  </defs>
+  <rect class="bg" width="1600" height="930" rx="28"/>
+  <text class="title" x="70" y="76">ProductVault — Component / UML Architecture Diagram</text>
+  <text class="sub" x="70" y="108">A modular monolith with a secure Angular client and a layered ASP.NET Core API</text>
+
+  <rect class="group" x="70" y="158" width="300" height="575" rx="20"/><text class="group-title" x="94" y="194">PRESENTATION LAYER</text>
+  <g filter="url(#shadow)"><rect class="box" x="98" y="225" width="244" height="174" rx="14"/><path class="boxhead" d="M112 225h216a14 14 0 0 1 14 14v44H98v-44a14 14 0 0 1 14-14z"/><text class="box-title" x="119" y="260">Angular 22 SPA</text><text class="text" x="119" y="314">• Standalone components</text><text class="text" x="119" y="343">• Route guard</text><text class="text" x="119" y="372">• HTTP interceptor</text></g>
+  <g filter="url(#shadow)"><rect class="box" x="98" y="464" width="244" height="170" rx="14"/><path class="boxhead" d="M112 464h216a14 14 0 0 1 14 14v44H98v-44a14 14 0 0 1 14-14z"/><text class="box-title" x="119" y="499">Browser session</text><text class="text" x="119" y="553">Short-lived access token</text><text class="text" x="119" y="582">HttpOnly refresh cookie</text><text class="text" x="119" y="611">CSRF header</text></g>
+
+  <rect class="group" x="470" y="158" width="650" height="575" rx="20"/><text class="group-title" x="494" y="194">APPLICATION LAYER · ASP.NET CORE 8 WEB API</text>
+  <g filter="url(#shadow)"><rect class="box" x="500" y="225" width="590" height="115" rx="14"/><path class="boxhead" d="M514 225h562a14 14 0 0 1 14 14v44H500v-44a14 14 0 0 1 14-14z"/><text class="box-title" x="521" y="260">REST controllers</text><text class="text" x="521" y="314">Auth · Products · Categories · Dashboard · Profile · Admin</text></g>
+  <g filter="url(#shadow)"><rect class="box" x="500" y="403" width="277" height="245" rx="14"/><path class="boxhead" d="M514 403h249a14 14 0 0 1 14 14v44H500v-44a14 14 0 0 1 14-14z"/><text class="box-title" x="521" y="438">Application services</text><text class="text" x="521" y="492">ProductCodeGenerator</text><text class="text" x="521" y="522">ExcelProductService</text><text class="text" x="521" y="552">Email verification</text><text class="text" x="521" y="582">SMTP email sender</text><text class="text" x="521" y="612">Refresh sessions</text></g>
+  <g filter="url(#shadow)"><rect class="box" x="813" y="403" width="277" height="245" rx="14"/><path class="boxhead" d="M827 403h249a14 14 0 0 1 14 14v44H813v-44a14 14 0 0 1 14-14z"/><text class="box-title" x="834" y="438">Security / cross-cutting</text><text class="text" x="834" y="492">ASP.NET Identity</text><text class="text" x="834" y="522">JWT authorization</text><text class="text" x="834" y="552">Owner-scoped queries</text><text class="text" x="834" y="582">Validation + exceptions</text><text class="text" x="834" y="612">Audit + metrics</text></g>
+
+  <rect class="group" x="1220" y="158" width="310" height="575" rx="20"/><text class="group-title" x="1244" y="194">INFRASTRUCTURE</text>
+  <g filter="url(#shadow)"><rect class="box" x="1248" y="225" width="254" height="132" rx="14"/><path class="boxhead" d="M1262 225h226a14 14 0 0 1 14 14v44H1248v-44a14 14 0 0 1 14-14z"/><text class="box-title" x="1269" y="260">EF Core</text><text class="text" x="1269" y="314">ApplicationDbContext</text><text class="small" x="1269" y="338">Migrations · concurrency</text></g>
+  <g filter="url(#shadow)"><rect class="box" x="1248" y="412" width="254" height="132" rx="14"/><path class="boxhead" d="M1262 412h226a14 14 0 0 1 14 14v44H1248v-44a14 14 0 0 1 14-14z"/><text class="box-title" x="1269" y="447">MySQL 8</text><text class="text" x="1269" y="501">Identity · catalogue</text><text class="small" x="1269" y="525">Audit · refresh sessions</text></g>
+  <g filter="url(#shadow)"><rect class="box" x="1248" y="600" width="254" height="95" rx="14"/><path class="boxhead" d="M1262 600h226a14 14 0 0 1 14 14v44H1248v-44a14 14 0 0 1 14-14z"/><text class="box-title" x="1269" y="635">File storage</text><text class="text" x="1269" y="673">Product images</text></g>
+
+  <path class="line" d="M342 312H498"/><text class="label" x="376" y="294">HTTPS / JSON</text>
+  <path class="line" d="M795 340V400"/><text class="label" x="810" y="378">workflow calls</text>
+  <path class="line" d="M1092 282H1246"/><text class="label" x="1145" y="264">EF Core</text>
+  <path class="line" d="M1375 357V410"/><text class="label" x="1390" y="390">persists</text>
+  <path class="line" d="M1092 520H1246"/><text class="label" x="1144" y="502">stores images</text>
+
+  <rect x="70" y="790" width="1460" height="82" rx="15" fill="#10213e"/>
+  <text x="98" y="827" font-family="Inter,Segoe UI,sans-serif" font-size="17" font-weight="800" fill="#fff">Request flow</text>
+  <text x="255" y="827" font-family="Inter,Segoe UI,sans-serif" font-size="16" fill="#dbeafe">Angular component → interceptor adds token → controller authorizes user → service applies business rule → EF Core persists owner-scoped data → JSON response updates the UI</text>
+</svg>

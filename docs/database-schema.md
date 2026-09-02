@@ -2,6 +2,8 @@
 
 The schema is created by EF Core migrations and targets MySQL 8.0. A reviewable migration script is checked in at [`backend/Data/ProductVault.mysql.sql`](../backend/Data/ProductVault.mysql.sql); regenerate it with `dotnet ef migrations script` after schema changes.
 
+![ProductVault ERD](diagrams/productvault-erd.svg)
+
 ```mermaid
 erDiagram
     AspNetUsers ||--o{ Categories : owns

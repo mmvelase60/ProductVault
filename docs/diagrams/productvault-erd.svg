@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="980" viewBox="0 0 1600 980" role="img" aria-labelledby="title description">
+  <title id="title">ProductVault entity relationship diagram</title>
+  <desc id="description">Identity users own categories, products, and refresh sessions. Categories contain products.</desc>
+  <defs>
+    <linearGradient id="header" x1="0" x2="1"><stop stop-color="#10213e"/><stop offset="1" stop-color="#1d4ed8"/></linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#0f172a" flood-opacity=".14"/></filter>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#64748b"/></marker>
+    <style>
+      .bg { fill: #f5f7fb; } .title { font: 800 34px Inter,Segoe UI,sans-serif; fill:#10213e; } .sub { font: 500 17px Inter,Segoe UI,sans-serif; fill:#64748b; }
+      .card { fill:#fff; stroke:#cbd5e1; stroke-width:1.5; } .head { fill:url(#header); } .entity { font:800 20px Inter,Segoe UI,sans-serif; fill:#fff; }
+      .field { font: 500 15px Inter,Segoe UI,sans-serif; fill:#334155; } .type { font: 500 13px Inter,Segoe UI,sans-serif; fill:#64748b; }
+      .tag { font:800 11px Inter,Segoe UI,sans-serif; fill:#1d4ed8; } .rel { font:700 14px Inter,Segoe UI,sans-serif; fill:#475569; }
+      .line { stroke:#64748b; stroke-width:2.2; fill:none; marker-end:url(#arrow); }
+    </style>
+  </defs>
+  <rect class="bg" width="1600" height="980" rx="28"/>
+  <text class="title" x="74" y="76">ProductVault — Entity Relationship Diagram</text>
+  <text class="sub" x="74" y="108">MySQL schema managed by EF Core migrations · PK = primary key · FK = foreign key · UQ = unique</text>
+
+  <path class="line" d="M500 352 C575 352, 565 282, 650 282"/>
+  <text class="rel" x="553" y="300">owns · OwnerId</text>
+  <path class="line" d="M500 495 C567 495, 570 640, 650 640"/>
+  <text class="rel" x="548" y="587">owns · OwnerId</text>
+  <path class="line" d="M965 410 C1050 410, 1050 642, 1134 642"/>
+  <text class="rel" x="1000" y="526">contains · CategoryId</text>
+  <path class="line" d="M500 570 C776 765, 1040 800, 1140 805"/>
+  <text class="rel" x="785" y="805">has sessions · UserId</text>
+
+  <g filter="url(#shadow)">
+    <rect class="card" x="74" y="205" width="426" height="410" rx="16"/>
+    <path class="head" d="M90 205h394a16 16 0 0 1 16 16v54H74v-54a16 16 0 0 1 16-16z"/>
+    <text class="entity" x="102" y="241">AspNetUsers</text>
+    <text class="field" x="103" y="311">Id</text><text class="type" x="244" y="311">string</text><text class="tag" x="424" y="311">PK</text>
+    <line x1="98" y1="330" x2="476" y2="330" stroke="#e2e8f0"/>
+    <text class="field" x="103" y="360">FirstName</text><text class="type" x="244" y="360">string</text>
+    <text class="field" x="103" y="400">Surname</text><text class="type" x="244" y="400">string</text>
+    <text class="field" x="103" y="440">UserName</text><text class="type" x="244" y="440">string</text><text class="tag" x="424" y="440">UQ</text>
+    <text class="field" x="103" y="480">Email</text><text class="type" x="244" y="480">string</text><text class="tag" x="424" y="480">UQ</text>
+    <text class="field" x="103" y="520">PasswordHash</text><text class="type" x="244" y="520">string</text>
+    <text class="field" x="103" y="560">EmailConfirmed</text><text class="type" x="244" y="560">bool</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect class="card" x="650" y="175" width="315" height="310" rx="16"/>
+    <path class="head" d="M666 175h283a16 16 0 0 1 16 16v54H650v-54a16 16 0 0 1 16-16z"/>
+    <text class="entity" x="678" y="211">Categories</text>
+    <text class="field" x="678" y="281">CategoryId</text><text class="type" x="806" y="281">int</text><text class="tag" x="910" y="281">PK</text>
+    <line x1="674" y1="300" x2="941" y2="300" stroke="#e2e8f0"/>
+    <text class="field" x="678" y="330">OwnerId</text><text class="type" x="806" y="330">string</text><text class="tag" x="910" y="330">FK</text>
+    <text class="field" x="678" y="370">Name</text><text class="type" x="806" y="370">string</text>
+    <text class="field" x="678" y="410">CategoryCode</text><text class="type" x="806" y="410">string</text><text class="tag" x="910" y="410">UQ*</text>
+    <text class="field" x="678" y="450">IsActive</text><text class="type" x="806" y="450">bool</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect class="card" x="1135" y="505" width="390" height="336" rx="16"/>
+    <path class="head" d="M1151 505h358a16 16 0 0 1 16 16v54h-390v-54a16 16 0 0 1 16-16z"/>
+    <text class="entity" x="1163" y="541">Products</text>
+    <text class="field" x="1163" y="611">ProductId</text><text class="type" x="1315" y="611">int</text><text class="tag" x="1470" y="611">PK</text>
+    <line x1="1159" y1="630" x2="1501" y2="630" stroke="#e2e8f0"/>
+    <text class="field" x="1163" y="660">CategoryId</text><text class="type" x="1315" y="660">int</text><text class="tag" x="1470" y="660">FK</text>
+    <text class="field" x="1163" y="700">OwnerId</text><text class="type" x="1315" y="700">string</text><text class="tag" x="1470" y="700">FK</text>
+    <text class="field" x="1163" y="740">ProductCode</text><text class="type" x="1315" y="740">string</text><text class="tag" x="1470" y="740">UQ</text>
+    <text class="field" x="1163" y="780">Name · Price · ImagePath</text><text class="type" x="1415" y="780">…</text>
+  </g>
+
+  <g filter="url(#shadow)">
+    <rect class="card" x="650" y="758" width="365" height="160" rx="16"/>
+    <path class="head" d="M666 758h333a16 16 0 0 1 16 16v54H650v-54a16 16 0 0 1 16-16z"/>
+    <text class="entity" x="678" y="794">RefreshTokens</text>
+    <text class="field" x="678" y="864">Id · UserId</text><text class="type" x="848" y="864">PK · FK</text>
+    <text class="field" x="678" y="900">TokenHash · ExpiresAt · RevokedAt</text>
+  </g>
+  <text class="sub" x="74" y="944">* CategoryCode is unique per owner. Audit fields and RowVersion are inherited by Categories and Products.</text>
+</svg>

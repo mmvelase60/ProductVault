@@ -1,10 +1,12 @@
 # ProductVault technical documentation
 
 - [Architecture](architecture.md)
+- [Architecture component diagram (SVG)](diagrams/productvault-architecture.svg)
 - [Codebase and frontend/backend integration guide](codebase-guide.md)
 - [Design diagrams](design.md)
 - [API reference](api.md)
 - [Database schema](database-schema.md)
+- [Entity relationship diagram (SVG)](diagrams/productvault-erd.svg)
 - [Testing and coverage](testing.md)
 - [Browser end-to-end test suite](testing.md#run-browser-level-checks)
 - [Manual acceptance test plan](acceptance-testing.md)
