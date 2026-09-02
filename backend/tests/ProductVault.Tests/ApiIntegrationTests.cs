@@ -29,6 +29,21 @@ public sealed class ApiIntegrationTests : IClassFixture<ProductVaultApiFactory>
     }
 
     [Fact]
+    public async Task Verification_code_confirms_an_unverified_account()
+    {
+        var email = $"verify-{Guid.NewGuid():N}@example.com";
+        var created = await factory.CreateUnconfirmedUserWithVerificationCodeAsync(email);
+        var client = factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
+
+        var response = await client.PostAsJsonAsync("/api/auth/verify-email-code", new { email, code = created.Code });
+
+        response.EnsureSuccessStatusCode();
+        using var scope = factory.Services.CreateScope();
+        var users = scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<ApplicationUser>>();
+        Assert.True((await users.FindByIdAsync(created.User.Id))!.EmailConfirmed);
+    }
+
+    [Fact]
     public async Task Refresh_token_rotates_and_logout_revokes_the_browser_session()
     {
         var email = $"session-{Guid.NewGuid():N}@example.com";

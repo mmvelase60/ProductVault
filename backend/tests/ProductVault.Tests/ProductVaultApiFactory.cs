@@ -53,6 +53,18 @@ public sealed class ProductVaultApiFactory : WebApplicationFactory<Program>
         return user;
     }
 
+    public async Task<(ApplicationUser User, string Code)> CreateUnconfirmedUserWithVerificationCodeAsync(string email)
+    {
+        using var scope = Services.CreateScope();
+        var users = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var verificationCodes = scope.ServiceProvider.GetRequiredService<IEmailVerificationCodeService>();
+        var user = new ApplicationUser { UserName = email, Email = email, FirstName = "Test", Surname = "User" };
+        var result = await users.CreateAsync(user, "Password1");
+        Assert.True(result.Succeeded, string.Join(", ", result.Errors.Select(error => error.Description)));
+        var code = await verificationCodes.CreateAsync(user);
+        return (user, code);
+    }
+
     public async Task<HttpClient> CreateAuthenticatedClientAsync(string email, params string[] roles)
     {
         await CreateUserAsync(email, roles);

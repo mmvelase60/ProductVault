@@ -6,8 +6,10 @@ using System.Text.Encodings.Web;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Options;
+using ProductVault.Data;
 using ProductVault.Services;
 using ProductVault.Models;
 
@@ -23,6 +25,7 @@ public class AuthController(
     IEmailVerificationCodeService verificationCodes,
     IUsernameGenerator usernameGenerator,
     IRefreshTokenService refreshTokens,
+    ApplicationDbContext db,
     RoleBootstrapper roleBootstrapper,
     IOptions<EmailOptions> emailOptions,
     IOptions<RefreshTokenOptions> tokenOptions,
@@ -107,7 +110,22 @@ public class AuthController(
         user.EmailConfirmed = true;
         var update = await users.UpdateAsync(user);
         if (!update.Succeeded)
-            return StatusCode(StatusCodes.Status500InternalServerError, new MessageResponse("Email verification could not be completed. Try again."));
+        {
+            var errors = string.Join("; ", update.Errors.Select(error => $"{error.Code}: {error.Description}"));
+            logger.LogWarning("Identity could not confirm email for user {UserId}: {Errors}. Falling back to a targeted confirmation update for this verified legacy account.", user.Id, errors);
+
+            // The one-time code has already been verified. This narrow fallback supports
+            // legacy Identity rows whose unrelated username data no longer satisfies a
+            // full UserManager update, without bypassing the code-verification gate.
+            var changed = await db.Users
+                .Where(candidate => candidate.Id == user.Id && !candidate.EmailConfirmed)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(candidate => candidate.EmailConfirmed, true), HttpContext.RequestAborted);
+            if (changed != 1)
+            {
+                logger.LogError("Email verification fallback did not update user {UserId}.", user.Id);
+                return StatusCode(StatusCodes.Status500InternalServerError, new MessageResponse("Email verification could not be completed. Request a new code and try again."));
+            }
+        }
 
         return Ok(new MessageResponse("Email verified. You can now sign in."));
     }
