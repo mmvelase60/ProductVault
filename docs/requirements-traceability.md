@@ -17,7 +17,7 @@ This matrix maps the assignment requirements to implementation evidence and veri
 | Product paging (10 per page) | `ProductsApiController` page-size limit | Create/import 11+ products. |
 | Category required for product | Angular form plus server-side category ownership check | Submit without/with inactive category. |
 | Auto product code | `ProductCodeGenerator` + serializable transaction | Create products and inspect `yyyyMM-###` values. |
-| Product image upload | `ProductsApiController` image endpoint | Upload a supported image below 5 MB. |
+| Product image upload | `ProductsApiController` image endpoint | Upload a JPG/JFIF, PNG, GIF, or WEBP image below 5 MB. |
 | Excel import/export | `ExcelProductService` and product actions | Import a valid workbook, then export. |
 | Clean layers / SOLID | Controllers, services, domain models, EF infrastructure | Review [architecture](architecture.md). |
 | Concurrency | `RowVersion` fields and edit handling | Submit a stale edit after a second update. |

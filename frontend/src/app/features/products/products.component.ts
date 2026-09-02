@@ -104,7 +104,7 @@ import { Category, Product, ProductPage, StockMovement } from '../../core/models
           <label>Quantity in stock<input type="number" min="0" step="1" [(ngModel)]="form.quantityInStock" name="quantityInStock" required></label>
           <label>Reorder level<input type="number" min="0" step="1" [(ngModel)]="form.reorderLevel" name="reorderLevel" required><small>Set 0 to disable low-stock alerts.</small></label>
         </div>
-        <label>Image<input type="file" accept="image/jpeg,image/png,image/gif,image/webp" (change)="selectImage($event)"><small>JPG, PNG, GIF, or WEBP; maximum 5 MB.</small></label>
+        <label>Image<input type="file" accept="image/jpeg,.jfif,image/png,image/gif,image/webp" (change)="selectImage($event)"><small>JPG, JFIF, PNG, GIF, or WEBP; maximum 5 MB.</small></label>
         <p class="error" role="alert" *ngIf="formError">{{ formError }}</p>
         <div class="actions">
           <button class="button" type="submit" [disabled]="productForm.invalid || saving">{{ saving ? 'Saving…' : 'Save product' }}</button>

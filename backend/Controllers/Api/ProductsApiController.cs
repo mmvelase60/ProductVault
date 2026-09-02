@@ -187,10 +187,16 @@ public class ProductsApiController(ApplicationDbContext db, UserManager<Applicat
     private async Task<string?> SaveImageAsync(IFormFile? image)
     {
         if (image is null || image.Length == 0) return null;
-        if (image.Length > 5 * 1024 * 1024 || !new[] { ".jpg", ".jpeg", ".png", ".gif", ".webp" }.Contains(Path.GetExtension(image.FileName).ToLowerInvariant())) throw new InvalidOperationException("Upload a JPG, PNG, GIF, or WEBP image smaller than 5 MB.");
+        var extension = Path.GetExtension(image.FileName).ToLowerInvariant();
+        if (image.Length > 5 * 1024 * 1024 || !new[] { ".jpg", ".jpeg", ".jfif", ".png", ".gif", ".webp" }.Contains(extension))
+            throw new InvalidOperationException("Upload a JPG, JFIF, PNG, GIF, or WEBP image smaller than 5 MB.");
+
+        // JFIF is a JPEG file format. Saving it with the standard extension ensures
+        // browsers and the static-file middleware consistently serve it as an image.
+        if (extension == ".jfif") extension = ".jpg";
         var folder = Path.Combine(environment.WebRootPath, "uploads", "product-images");
         Directory.CreateDirectory(folder);
-        var fileName = $"{Guid.NewGuid():N}{Path.GetExtension(image.FileName).ToLowerInvariant()}";
+        var fileName = $"{Guid.NewGuid():N}{extension}";
         var fullPath = Path.Combine(folder, fileName);
         await using var stream = System.IO.File.Create(fullPath);
         await image.CopyToAsync(stream);

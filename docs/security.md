@@ -14,7 +14,7 @@ Every category/product query includes an `OwnerId == currentUserId` filter. This
 
 - Server-side validation validates required values, price range, and category-code format even when a request bypasses Angular.
 - Category code format is constrained to `AAA999`; database indexes enforce uniqueness.
-- Image uploads allow only JPG, JPEG, PNG, GIF, and WEBP extensions and reject files above 5 MB.
+- Image uploads allow JPG/JPEG/JFIF, PNG, GIF, and WEBP files and reject files above 5 MB. JFIF uploads are stored with a standard `.jpg` extension so browsers serve them consistently.
 - Files are stored with generated GUID names rather than supplied filenames.
 - Excel imports accept only `.xlsx`, limit rows to 500, validate price/name/category ownership, and run in a retry-safe serializable transaction.
 

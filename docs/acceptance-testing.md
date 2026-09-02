@@ -15,7 +15,7 @@ Run the application with the HTTPS launch profile and use a fresh test account w
 | AT-07 | Require category | Try saving a product without a category. | Category validation message is displayed. |
 | AT-08 | Edit product | Update the name or price. | Product details update successfully. |
 | AT-09 | Delete product | Delete a product and accept the confirmation. | Product is removed and success message appears. |
-| AT-10 | Image validation | Upload a valid image; then try unsupported/oversize file. | Valid image saves; invalid input is rejected. |
+| AT-10 | Image validation | Upload a valid JPG/JFIF, PNG, GIF, or WEBP image; then try unsupported/oversize file. | Valid image saves; invalid input is rejected. |
 | AT-11 | Excel import/export | Export products; import a valid worksheet with several valid rows using Name, Description, Category Code, Price. | Export downloads; every imported row has a distinct generated code. |
 | AT-12 | Paging | Create/import at least 11 products. | Page 1 contains 10 items and next page is available. |
 | AT-13 | Ownership | With user B, attempt user A’s product/category URL. | `404 Not Found`; no data is disclosed. |
