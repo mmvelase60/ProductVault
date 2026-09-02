@@ -1,6 +1,6 @@
 import { CurrencyPipe, DatePipe, NgFor, NgIf } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, HostListener, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/api.service';
 import { apiBaseUrl } from '../../core/api.config';
@@ -54,7 +54,7 @@ import { Category, Product, ProductPage, StockMovement } from '../../core/models
     <p class="notice" role="status" aria-live="polite" *ngIf="message">{{ message }}</p>
     <p class="error" role="alert" *ngIf="error">{{ error }}</p>
 
-    <section class="split-layout products-layout" [class.single-column]="!showForm && !stockProduct">
+    <section class="table-layout">
       <section class="card table-card" [attr.aria-busy]="loading">
         <div class="loading-state" role="status" aria-live="polite" *ngIf="loading"><span class="spinner" aria-hidden="true"></span><span>Loading products…</span></div>
         <ng-container *ngIf="!loading">
@@ -93,10 +93,11 @@ import { Category, Product, ProductPage, StockMovement } from '../../core/models
         </div>
         </ng-container>
       </section>
+    </section>
 
-      <form class="card form-card" *ngIf="showForm" #productForm="ngForm" (ngSubmit)="save()" [attr.aria-busy]="saving">
-        <span class="eyebrow">{{ editing ? 'Edit product' : 'New product' }}</span>
-        <h2>{{ editing ? editing.name : 'Add product' }}</h2>
+    <section class="editor-backdrop" *ngIf="showForm" (click)="closeForm()">
+      <form class="editor-dialog form-card" role="dialog" aria-modal="true" aria-labelledby="product-editor-title" #productForm="ngForm" (click)="$event.stopPropagation()" (ngSubmit)="save()" [attr.aria-busy]="saving">
+        <div class="editor-header"><div><span class="eyebrow">{{ editing ? 'Edit product' : 'New product' }}</span><h2 id="product-editor-title">{{ editing ? editing.name : 'Add product' }}</h2></div><button class="editor-close" type="button" [disabled]="saving" (click)="closeForm()" aria-label="Close product editor">×</button></div>
         <label>Name<input [(ngModel)]="form.name" name="name" required></label>
         <label>Description<textarea [(ngModel)]="form.description" name="description" rows="3"></textarea></label>
         <div class="two-cols">
@@ -114,9 +115,11 @@ import { Category, Product, ProductPage, StockMovement } from '../../core/models
           <button class="button secondary" type="button" [disabled]="saving" (click)="closeForm()">Cancel</button>
         </div>
       </form>
+    </section>
 
-      <form class="card form-card stock-card" *ngIf="stockProduct" #stockAdjustmentForm="ngForm" (ngSubmit)="saveStock()" [attr.aria-busy]="savingStock">
-        <span class="eyebrow">Inventory control</span><h2>{{ stockProduct.name }}</h2>
+    <section class="editor-backdrop" *ngIf="stockProduct" (click)="closeStock()">
+      <form class="editor-dialog form-card stock-card" role="dialog" aria-modal="true" aria-labelledby="stock-editor-title" #stockAdjustmentForm="ngForm" (click)="$event.stopPropagation()" (ngSubmit)="saveStock()" [attr.aria-busy]="savingStock">
+        <div class="editor-header"><div><span class="eyebrow">Inventory control</span><h2 id="stock-editor-title">{{ stockProduct.name }}</h2></div><button class="editor-close" type="button" [disabled]="savingStock" (click)="closeStock()" aria-label="Close stock editor">×</button></div>
         <p class="muted">Current quantity: <strong>{{ stockProduct.quantityInStock }}</strong>{{ stockProduct.reorderLevel > 0 ? ' · Reorder at ' + stockProduct.reorderLevel : '' }}</p>
         <label>Action<select [(ngModel)]="stockAdjustment.operation" name="operation"><option value="receive">Receive stock</option><option value="set">Set exact quantity</option></select></label>
         <label>{{ stockAdjustment.operation === 'receive' ? 'Quantity received' : 'New quantity' }}<input type="number" [min]="stockAdjustment.operation === 'receive' ? 1 : 0" step="1" [(ngModel)]="stockAdjustment.quantity" name="quantity" required></label>
@@ -214,6 +217,7 @@ export class ProductsComponent implements OnInit {
   }
 
   closeForm(): void {
+    if (this.saving) return;
     this.showForm = false;
     this.formError = '';
   }
@@ -232,9 +236,16 @@ export class ProductsComponent implements OnInit {
   }
 
   closeStock(): void {
+    if (this.savingStock) return;
     this.stockProduct = undefined;
     this.movements = [];
     this.stockError = '';
+  }
+
+  @HostListener('document:keydown.escape')
+  closeEditorsOnEscape(): void {
+    if (this.showForm) this.closeForm();
+    else this.closeStock();
   }
 
   saveStock(): void {

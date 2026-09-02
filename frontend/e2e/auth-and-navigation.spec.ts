@@ -107,10 +107,28 @@ test.describe('catalogue data rendering', () => {
     await expect(page.getByText('1 product in your private workspace.')).toBeVisible();
     await expect(page.getByRole('cell', { name: 'Handy andy' })).toBeVisible();
     await expect(page.getByRole('combobox', { name: 'Filter by category' })).toContainText('Cleaning material');
-    expect(await tableUsesFullLayoutWidth(page, '.products-layout')).toBeTruthy();
+    expect(await tableUsesFullLayoutWidth(page, '.table-layout')).toBeTruthy();
+
+    await page.getByRole('button', { name: 'Add product' }).click();
+    const productEditor = page.getByRole('dialog', { name: 'Add product' });
+    await expect(productEditor).toBeVisible();
+    await productEditor.getByRole('button', { name: 'Close product editor' }).click();
+    await expect(productEditor).toHaveCount(0);
+
+    await page.getByRole('button', { name: 'Stock' }).click();
+    const stockEditor = page.getByRole('dialog', { name: 'Handy andy' });
+    await expect(stockEditor).toContainText('Inventory control');
+    await page.keyboard.press('Escape');
+    await expect(stockEditor).toHaveCount(0);
 
     await page.goto('/categories');
     await expect(page.getByRole('cell', { name: 'Cleaning material' })).toBeVisible();
-    expect(await tableUsesFullLayoutWidth(page, '.split-layout')).toBeTruthy();
+    expect(await tableUsesFullLayoutWidth(page, '.table-layout')).toBeTruthy();
+
+    await page.getByRole('button', { name: 'Add category' }).click();
+    const categoryEditor = page.getByRole('dialog', { name: 'Add category' });
+    await expect(categoryEditor).toBeVisible();
+    await categoryEditor.getByRole('button', { name: 'Close category editor' }).click();
+    await expect(categoryEditor).toHaveCount(0);
   });
 });

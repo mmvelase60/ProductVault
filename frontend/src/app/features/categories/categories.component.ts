@@ -1,6 +1,6 @@
 import { NgFor, NgIf } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, HostListener, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/api.service';
 import { Category } from '../../core/models';
@@ -21,7 +21,7 @@ import { Category } from '../../core/models';
     <p class="notice" role="status" aria-live="polite" *ngIf="message">{{ message }}</p>
     <p class="error" role="alert" *ngIf="error && !showForm">{{ error }}</p>
 
-    <section class="split-layout" [class.single-column]="!showForm">
+    <section class="table-layout">
       <section class="card table-card" [attr.aria-busy]="loading">
         <div class="loading-state" role="status" aria-live="polite" *ngIf="loading"><span class="spinner" aria-hidden="true"></span><span>Loading categories…</span></div>
         <ng-container *ngIf="!loading">
@@ -40,10 +40,11 @@ import { Category } from '../../core/models';
         <ng-template #empty><div class="empty"><h3>No categories yet</h3><p>Create your first category before adding products.</p></div></ng-template>
         </ng-container>
       </section>
+    </section>
 
-      <form class="card form-card" *ngIf="showForm" #categoryForm="ngForm" (ngSubmit)="save()" [attr.aria-busy]="saving">
-        <span class="eyebrow">{{ editing ? 'Edit category' : 'New category' }}</span>
-        <h2>{{ editing ? editing.name : 'Add category' }}</h2>
+    <section class="editor-backdrop" *ngIf="showForm" (click)="closeForm()">
+      <form class="editor-dialog form-card" role="dialog" aria-modal="true" aria-labelledby="category-editor-title" #categoryForm="ngForm" (click)="$event.stopPropagation()" (ngSubmit)="save()" [attr.aria-busy]="saving">
+        <div class="editor-header"><div><span class="eyebrow">{{ editing ? 'Edit category' : 'New category' }}</span><h2 id="category-editor-title">{{ editing ? editing.name : 'Add category' }}</h2></div><button class="editor-close" type="button" [disabled]="saving" (click)="closeForm()" aria-label="Close category editor">×</button></div>
         <label>Name<input [(ngModel)]="form.name" name="name" required></label>
         <label>Category code<input [(ngModel)]="form.categoryCode" name="categoryCode" maxlength="6" (input)="formatCode()" placeholder="ABC123" required><small>3 letters followed by 3 numbers.</small></label>
         <label class="check"><input type="checkbox" [(ngModel)]="form.isActive" name="isActive"> Active and available for products</label>
@@ -101,9 +102,13 @@ export class CategoriesComponent implements OnInit {
   }
 
   closeForm(): void {
+    if (this.saving) return;
     this.showForm = false;
     this.error = '';
   }
+
+  @HostListener('document:keydown.escape')
+  closeOnEscape(): void { this.closeForm(); }
 
   formatCode(): void { this.form.categoryCode = this.form.categoryCode.toUpperCase().replace(/[^A-Z0-9]/g, ''); }
 
