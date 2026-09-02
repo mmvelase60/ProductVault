@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/api.service';
 import { apiBaseUrl } from '../../core/api.config';
 import { Category, Product, ProductPage, StockMovement } from '../../core/models';
+import { NotificationService } from '../../core/notification.service';
 
 @Component({
   selector: 'pv-products',
@@ -167,7 +168,7 @@ export class ProductsComponent implements OnInit {
   loadingMovements = false;
   form = { name: '', description: '', price: 0, quantityInStock: 0, reorderLevel: 0, categoryId: 0 };
 
-  constructor(private readonly api: ApiService, private readonly changeDetector: ChangeDetectorRef) {}
+  constructor(private readonly api: ApiService, private readonly changeDetector: ChangeDetectorRef, private readonly notifications: NotificationService) {}
 
   get productCount(): number { return this.page?.totalCount ?? 0; }
   get totalPages(): number { return this.page ? Math.max(1, Math.ceil(this.page.totalCount / this.page.pageSize)) : 1; }
@@ -301,7 +302,16 @@ export class ProductsComponent implements OnInit {
   }
 
   remove(product: Product): void {
-    if (!confirm(`Delete ${product.name}?`)) return;
+    if (this.deletingId) return;
+    this.notifications.showConfirmation({
+      title: 'Delete product?',
+      message: `“${product.name}” will be permanently removed from your catalogue. This action cannot be undone.`,
+      confirmLabel: 'Delete product',
+      onConfirm: () => this.delete(product)
+    });
+  }
+
+  private delete(product: Product): void {
     this.deletingId = product.productId;
     this.error = '';
     this.api.deleteProduct(product.productId).subscribe({

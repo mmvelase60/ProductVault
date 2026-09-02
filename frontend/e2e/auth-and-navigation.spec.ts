@@ -121,6 +121,12 @@ test.describe('catalogue data rendering', () => {
     await page.keyboard.press('Escape');
     await expect(stockEditor).toHaveCount(0);
 
+    await page.getByRole('button', { name: 'Delete Handy andy' }).click();
+    const confirmation = page.getByRole('alertdialog', { name: 'Delete product?' });
+    await expect(confirmation).toContainText('This action cannot be undone.');
+    await confirmation.getByRole('button', { name: 'Cancel' }).click();
+    await expect(confirmation).toHaveCount(0);
+
     await page.goto('/categories');
     await expect(page.getByRole('cell', { name: 'Cleaning material', exact: true })).toBeVisible();
     expect(await tableUsesFullLayoutWidth(page, '.table-layout')).toBeTruthy();

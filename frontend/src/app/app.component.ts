@@ -14,6 +14,15 @@ import { NotificationService } from './core/notification.service';
       <ng-template #guest><div class="account"><a *ngIf="!isSignInPage" routerLink="/login">Sign in</a><a *ngIf="!isRegistrationPage" class="button compact" routerLink="/register">Create account</a></div></ng-template>
     </nav></header>
     <main id="main-content" class="page-shell" tabindex="-1"><router-outlet /></main>
+    <section class="dialog-backdrop" *ngIf="notifications.confirmation$ | async as confirmation" (click)="notifications.dismissConfirmation()">
+      <div class="message-dialog confirmation-dialog" role="alertdialog" aria-modal="true" aria-labelledby="confirmation-dialog-title" aria-describedby="confirmation-dialog-description" (click)="$event.stopPropagation()">
+        <span class="dialog-icon" aria-hidden="true">!</span>
+        <span class="eyebrow">Confirm action</span>
+        <h2 id="confirmation-dialog-title">{{ confirmation.title }}</h2>
+        <p id="confirmation-dialog-description">{{ confirmation.message }}</p>
+        <div class="actions"><button class="button secondary" type="button" autofocus (click)="notifications.dismissConfirmation()">{{ confirmation.cancelLabel }}</button><button class="button danger-button" type="button" (click)="notifications.confirm()">{{ confirmation.confirmLabel }}</button></div>
+      </div>
+    </section>
     <section class="dialog-backdrop" *ngIf="notifications.dialog$ | async as dialog" (click)="notifications.dismissDialog()">
       <div class="message-dialog" [class.error-dialog]="dialog.kind === 'error'" [class.success-dialog]="dialog.kind === 'success'" role="dialog" aria-modal="true" aria-labelledby="message-dialog-title" aria-describedby="message-dialog-description" (click)="$event.stopPropagation()">
         <span class="dialog-icon" aria-hidden="true">{{ dialog.kind === 'success' ? '✓' : dialog.kind === 'error' ? '!' : 'i' }}</span>
@@ -43,7 +52,10 @@ export class AppComponent {
   }
 
   @HostListener('document:keydown.escape')
-  closeDialogOnEscape(): void { this.notifications.dismissDialog(); }
+  closeDialogOnEscape(): void {
+    this.notifications.dismissConfirmation();
+    this.notifications.dismissDialog();
+  }
 
   logout(): void {
     this.menuOpen = false;
