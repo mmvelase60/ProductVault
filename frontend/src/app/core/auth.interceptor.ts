@@ -10,10 +10,11 @@ export const authInterceptor: HttpInterceptorFn = (request, next) => {
   const router = inject(Router);
   const notifications = inject(NotificationService);
   const token = auth.token;
-  return next(token ? request.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : request).pipe(
+  const isSessionRequest = request.url.endsWith('/auth/refresh') || request.url.endsWith('/auth/logout');
+  return next(token && !isSessionRequest ? request.clone({ setHeaders: { Authorization: `Bearer ${token}` } }) : request).pipe(
     catchError((response: HttpErrorResponse) => {
       if (response.status === 401 && auth.isAuthenticated) {
-        auth.logout();
+        auth.clearSession();
         notifications.show('Your session has ended. Please sign in again.', 'info');
         void router.navigateByUrl('/login');
       } else if (response.status === 429) {

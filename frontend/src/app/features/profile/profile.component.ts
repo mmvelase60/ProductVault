@@ -4,6 +4,8 @@ import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../core/api.service';
 import { Profile } from '../../core/models';
+import { AuthService } from '../../core/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'pv-profile',
@@ -35,7 +37,7 @@ export class ProfileComponent implements OnInit {
   form = { firstName: '', surname: '' };
   password = { currentPassword: '', newPassword: '' };
   message = ''; error = ''; loading = true; savingProfile = false; savingPassword = false;
-  constructor(private readonly api: ApiService, private readonly changeDetector: ChangeDetectorRef) {}
+  constructor(private readonly api: ApiService, private readonly auth: AuthService, private readonly router: Router, private readonly changeDetector: ChangeDetectorRef) {}
   ngOnInit(): void { this.load(); }
   saveProfile(): void {
     if (this.savingProfile) return;
@@ -45,7 +47,12 @@ export class ProfileComponent implements OnInit {
   changePassword(): void {
     if (this.savingPassword) return;
     this.savingPassword = true; this.error = ''; this.message = '';
-    this.api.changePassword(this.password).subscribe({ next: response => { this.savingPassword = false; this.password = { currentPassword: '', newPassword: '' }; this.message = response.message; }, error: response => this.handleError(response, 'Password could not be changed.', 'password') });
+    this.api.changePassword(this.password).subscribe({ next: response => {
+      this.savingPassword = false;
+      this.password = { currentPassword: '', newPassword: '' };
+      this.auth.logout().subscribe();
+      void this.router.navigateByUrl('/login', { state: { message: response.message } });
+    }, error: response => this.handleError(response, 'Password could not be changed.', 'password') });
   }
   private load(): void { this.loading = true; this.api.profile().subscribe({ next: profile => { this.profile = profile; this.form = { firstName: profile.firstName, surname: profile.surname }; this.loading = false; this.changeDetector.detectChanges(); }, error: () => { this.loading = false; this.error = 'Profile details could not be loaded.'; this.changeDetector.detectChanges(); } }); }
   private handleError(response: HttpErrorResponse, fallback: string, operation: 'profile' | 'password'): void { if (operation === 'profile') this.savingProfile = false; else this.savingPassword = false; this.error = response.error?.message ?? response.error?.errors?.profile ?? fallback; }

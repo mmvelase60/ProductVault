@@ -2,7 +2,7 @@
 
 ProductVault is a separated full-stack product catalogue application built for the assessment brief.
 
-- **Frontend:** Angular 22, TypeScript, standalone components, route guards, JWT interceptor.
+- **Frontend:** Angular 22, TypeScript, standalone components, route guards, and an in-memory JWT interceptor.
 - **Backend:** ASP.NET Core 8 Web API, EF Core, ASP.NET Core Identity, JWT bearer authentication.
 - **Database:** MySQL 8 with EF Core migrations.
 
@@ -12,7 +12,7 @@ Every product and category belongs to its authenticated owner. The API enforces 
 
 ## Features
 
-- One-time email-code verification, password recovery, and JWT sign-in for the Angular SPA.
+- One-time email-code verification, password recovery, short-lived JWT access tokens, and rotating secure browser sessions.
 - Category create/edit with per-user `ABC123` code validation.
 - Responsive Angular UI with an accessible mobile navigation, touch-friendly controls, and scroll-safe catalogue tables.
 - Product CRUD, stock and reorder thresholds, low-stock filtering, immutable stock-movement history, 10-item paging, searching, category filtering, sorting, optimistic concurrency, and a CSV/Excel catalogue import centre.
@@ -92,13 +92,13 @@ For the Catalogue Import Centre, ready-to-upload sample files are available at [
 
 ## API authentication
 
-Registration creates an unverified account and emails a single-use six-digit verification code. The code expires after 10 minutes and is required before sign-in; confirmed users then receive an eight-hour JWT access token. Angular stores the active session locally and its interceptor sends:
+Registration creates an unverified account and emails a single-use six-digit verification code. The code expires after 10 minutes and is required before sign-in. A confirmed login returns a 15-minute JWT access token, held in Angular memory only. The API also issues a seven-day rotating refresh token as an `HttpOnly`, `Secure`, `SameSite=None` cookie; a separate rotating CSRF value protects refresh and sign-out requests. The JWT is not placed in `localStorage` or persisted by the SPA. Angular sends the current access token only while the page is open:
 
 ```text
 Authorization: Bearer <access-token>
 ```
 
-Protected API routes include `/api/dashboard`, `/api/categories`, and `/api/products`.
+Refreshing the browser safely obtains a fresh short-lived access token through the protected cookie flow. Signing out, resetting a password, or changing a password revokes the server-side refresh session. Protected API routes include `/api/dashboard`, `/api/categories`, and `/api/products`.
 
 ## Verification
 
@@ -121,4 +121,4 @@ Open [Prometheus](http://localhost:9090/targets) and [Grafana](http://localhost:
 
 ## Interview summary
 
-> “I separated ProductVault into an Angular SPA and ASP.NET Core Web API. Angular uses a JWT interceptor and route guard, while the API derives the authenticated user ID from the bearer token and applies `OwnerId` filtering to every catalogue query. EF Core persists the MySQL schema and MySQL timestamp-backed concurrency tokens prevent silent lost updates.”
+> “I separated ProductVault into an Angular SPA and ASP.NET Core Web API. Angular keeps short-lived JWT access tokens only in memory, restores sessions through a rotating HttpOnly refresh cookie, and uses a route guard plus interceptor. The API derives the authenticated user ID from the bearer token and applies `OwnerId` filtering to every catalogue query. EF Core persists the MySQL schema and MySQL timestamp-backed concurrency tokens prevent silent lost updates.”

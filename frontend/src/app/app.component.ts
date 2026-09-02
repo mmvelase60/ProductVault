@@ -35,7 +35,7 @@ export class AppComponent {
 
   logout(): void {
     this.menuOpen = false;
-    this.auth.logout();
+    this.auth.logout().subscribe();
     void this.router.navigateByUrl('/login');
   }
 }

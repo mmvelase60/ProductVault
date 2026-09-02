@@ -30,8 +30,8 @@ The Angular application is in `frontend/src/app`. It uses standalone components 
 | Application shell | `app.component.ts` | Renders the navigation bar, switches it for signed-in and guest users, supports mobile navigation, and signs a user out before routing to the sign-in page. |
 | Application setup | `app.config.ts`, `app.routes.ts` | Registers Angular services, the HTTP interceptor, and routes. Routes requiring a session are protected by the route guard. |
 | API configuration | `core/api.config.ts` | Holds the API base URL so the frontend does not hard-code endpoint locations throughout the UI. |
-| Authentication state | `core/auth.service.ts` | Registers and signs in users, verifies email codes, requests password resets, stores the JWT session locally, and exposes the current authentication state and roles. |
-| HTTP security | `core/auth.interceptor.ts` | Adds the bearer token to authenticated API requests. Components do not need to repeat this security work. |
+| Authentication state | `core/auth.service.ts` | Registers and signs in users, verifies email codes, requests password resets, holds the short-lived JWT only in memory, restores a session through the rotating secure cookie flow, and exposes current authentication state and roles. |
+| HTTP security | `core/auth.interceptor.ts` | Adds the in-memory bearer token to authenticated API requests and clears expired local state. Components do not need to repeat this security work. |
 | Route protection | `core/auth.guard.ts` | Prevents unauthenticated users from opening dashboard, product, category, or import pages. |
 | Catalogue API client | `core/api.service.ts` | Provides typed HTTP methods for dashboard, categories, products, downloads, and catalogue imports. |
 | Shared contracts | `core/models.ts` | Defines the TypeScript shapes used by services and components when sending and receiving JSON. |
@@ -48,7 +48,7 @@ The Angular application is in `frontend/src/app`. It uses standalone components 
 1. A user acts in a component, for example presses **Add product** or **Sign in**.
 2. The component validates the form and calls a method on `AuthService` or `ApiService`.
 3. That service uses Angular `HttpClient` to call an endpoint such as `POST /api/auth/login` or `POST /api/products`.
-4. `auth.interceptor.ts` automatically attaches `Authorization: Bearer <token>` when a user is signed in.
+4. `auth.interceptor.ts` automatically attaches `Authorization: Bearer <token>` when a user is signed in. On application start, `AuthService` exchanges a valid rotating `HttpOnly` refresh cookie plus CSRF header for a fresh in-memory access token.
 5. The API returns JSON, or a file for exports and templates.
 6. The service maps the response back to the component, which updates its state and Angular renders the result.
 
@@ -66,7 +66,7 @@ The API lives in `backend`. `Program.cs` is the composition root: it wires toget
 | Audit model | `Models/AuditEvent.cs` | Stores an immutable workspace activity record for catalogue, profile, and import actions. |
 | Data access | `Data/ApplicationDbContext.cs` | Defines the EF Core model, Identity integration, `Categories` and `Products` sets, indexes, constraints, relationships, and concurrency mappings. |
 | Database history | `Data/Migrations/*` | Versioned schema changes that create and evolve the MySQL database consistently. |
-| Authentication controller | `Controllers/Api/AuthController.cs` | Registers users, creates JWT sessions, verifies six-digit email codes, resends codes, and handles forgotten-password/reset-password requests. |
+| Authentication controller | `Controllers/Api/AuthController.cs` | Registers users, creates short-lived JWT access responses plus secure refresh cookies, rotates/revokes sessions, verifies six-digit email codes, resends codes, and handles forgotten-password/reset-password requests. |
 | Category controller | `Controllers/Api/CategoriesApiController.cs` | Supplies authenticated category CRUD while enforcing that a user can access only their own categories. |
 | Product controller | `Controllers/Api/ProductsApiController.cs` | Supplies authenticated product CRUD, stock-movement history, image handling, product export, and the existing product Excel import flow. |
 | Dashboard controller | `Controllers/Api/DashboardApiController.cs` | Calculates dashboard totals, supplies recent products, and supports development demo data. |
@@ -74,6 +74,7 @@ The API lives in `backend`. `Program.cs` is the composition root: it wires toget
 | Product-code service | `Services/ProductCodeGenerator.cs` | Generates unique, meaningful product codes in one reusable place. |
 | Spreadsheet service | `Services/ExcelProductService.cs` | Reads the supported CSV/XLSX format into validated import rows. It is used by the import boundary rather than being embedded in a controller. |
 | Verification-code service | `Services/EmailVerificationCodeService.cs` | Creates cryptographically secure six-digit codes, stores only protected code values in Identity token storage, expires them after ten minutes, and limits incorrect attempts. |
+| Refresh-token service | `Services/RefreshTokenService.cs` | Generates high-entropy browser session credentials, persists only SHA-256 hashes, rotates tokens on refresh, verifies CSRF values, and revokes individual or all user sessions. |
 | Email sender | `Services/SmtpEmailSender.cs`, `Services/EmailOptions.cs` | Sends verification and reset messages through configured SMTP settings. In local development these settings can be supplied through .NET User Secrets instead of source control. |
 | Identity roles | `Services/RoleBootstrapper.cs`, `Controllers/Api/AdminApiController.cs` | Creates the `User` and `Admin` roles, assigns every registration a user role, optionally promotes the configured administrator, and protects admin-only APIs. |
 | Audit trail | `Services/AuditTrailService.cs` | Adds activity records alongside catalogue, profile, and import changes. |
@@ -110,6 +111,7 @@ This is a deliberate design choice, not a missing implementation. A dedicated re
 | Database area | Purpose |
 | --- | --- |
 | `AspNetUsers` and other `AspNet*` tables | Managed by ASP.NET Identity. Stores accounts, password hashes, confirmation state, token records, login metadata, and first/surname profile values. |
+| `RefreshTokens` | Stores hashed refresh and CSRF secrets, expiry, revocation, and rotation metadata for server-revocable browser sessions. |
 | `categories` | Stores each user's catalogue categories, category codes, active state, audit data, and concurrency value. |
 | `products` | Stores products, prices, stock quantity, reorder level, image references, category relationship, ownership, audit data, and concurrency value. |
 | `AuditEvents` | Stores owner-scoped history for catalogue, profile, import, and password-change actions. |
@@ -144,11 +146,11 @@ sequenceDiagram
     C-->>R: Success; frontend routes to sign in
 ```
 
-The API uses `UserManager<ApplicationUser>` from Identity rather than handling password hashing itself. A user must have `EmailConfirmed` before `POST /api/auth/login` creates a JWT.
+The API uses `UserManager<ApplicationUser>` from Identity rather than handling password hashing itself. A user must have `EmailConfirmed` before `POST /api/auth/login` creates a 15-minute JWT access response and secure refresh session.
 
 ### Authenticated category or product change
 
-1. The frontend guard ensures the user has a stored session before opening the route.
+1. The frontend application initializer restores an in-memory session from a valid rotating refresh cookie before the guard opens a private route.
 2. The component calls `ApiService`; the interceptor attaches the JWT.
 3. JWT middleware validates the token and makes the user identity available to the controller.
 4. The controller filters the category/product by the authenticated `OwnerId`, validates the request, and applies the change through `ApplicationDbContext`.
@@ -179,6 +181,6 @@ Secrets such as database passwords, JWT signing keys, and SMTP app passwords mus
 
 ## 7. Suggested explanation in an interview
 
-> “ProductVault is an Angular and ASP.NET Core modular monolith. Angular components call focused client services; a JWT interceptor adds the session token and a route guard protects private pages. ASP.NET Core controllers are the secure HTTP boundary, while focused services handle reusable workflows such as email-code verification, spreadsheet parsing, and product-code generation. Entity Framework Core’s `ApplicationDbContext` provides the repository and unit-of-work behavior for MySQL, with every catalogue query scoped to the authenticated owner. That gives the project clear boundaries without adding unnecessary repository boilerplate.”
+> “ProductVault is an Angular and ASP.NET Core modular monolith. Angular components call focused client services; a JWT interceptor adds a short-lived in-memory access token, a rotating HttpOnly cookie restores sessions, and a route guard protects private pages. ASP.NET Core controllers are the secure HTTP boundary, while focused services handle reusable workflows such as email-code verification, refresh-token rotation, spreadsheet parsing, and product-code generation. Entity Framework Core’s `ApplicationDbContext` provides the repository and unit-of-work behavior for MySQL, with every catalogue query scoped to the authenticated owner. That gives the project clear boundaries without adding unnecessary repository boilerplate.”
 
 For a concise feature-by-feature presentation, see the [interview walkthrough](interview-walkthrough.md) and [interview preparation cheat sheet](interview-prep.md).

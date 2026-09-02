@@ -1,14 +1,15 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, firstValueFrom, of, tap } from 'rxjs';
 import { apiUrl } from './api.config';
 import { AuthResponse, EmailActionResponse } from './models';
 
-const storageKey = 'productvault-session';
+const csrfCookieName = 'productvault_csrf';
+const csrfHeaderName = 'X-CSRF-TOKEN';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly sessionSubject = new BehaviorSubject<AuthResponse | null>(this.readSession());
+  private readonly sessionSubject = new BehaviorSubject<AuthResponse | null>(null);
   readonly session$ = this.sessionSubject.asObservable();
 
   constructor(private readonly http: HttpClient) {}
@@ -17,7 +18,7 @@ export class AuthService {
   get isAuthenticated(): boolean { return this.token !== null; }
 
   login(email: string, password: string): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${apiUrl}/auth/login`, { email, password }).pipe(tap(session => this.store(session)));
+    return this.http.post<AuthResponse>(`${apiUrl}/auth/login`, { email, password }, { withCredentials: true }).pipe(tap(session => this.store(session)));
   }
 
   register(firstName: string, surname: string, email: string, password: string): Observable<EmailActionResponse> {
@@ -40,25 +41,35 @@ export class AuthService {
     return this.http.post<EmailActionResponse>(`${apiUrl}/auth/reset-password`, { userId, token, password });
   }
 
-  logout(): void {
-    localStorage.removeItem(storageKey);
+  async restoreSession(): Promise<void> {
+    await firstValueFrom(this.http.post<AuthResponse>(`${apiUrl}/auth/refresh`, {}, this.sessionCookieOptions()).pipe(
+      tap(session => this.store(session)),
+      catchError(() => {
+        this.clearSession();
+        return of(null);
+      })
+    ));
+  }
+
+  logout(): Observable<void> {
+    this.clearSession();
+    return this.http.post<void>(`${apiUrl}/auth/logout`, {}, this.sessionCookieOptions()).pipe(catchError(() => of(void 0)));
+  }
+
+  clearSession(): void {
     this.sessionSubject.next(null);
   }
 
   private store(session: AuthResponse): void {
-    localStorage.setItem(storageKey, JSON.stringify(session));
     this.sessionSubject.next(session);
   }
 
-  private readSession(): AuthResponse | null {
-    const value = localStorage.getItem(storageKey);
-    if (!value) return null;
-    try {
-      const session = JSON.parse(value) as Partial<AuthResponse>;
-      if (!session.accessToken || !session.expiresAt || new Date(session.expiresAt) <= new Date()) return null;
-      return { accessToken: session.accessToken, expiresAt: session.expiresAt, email: session.email ?? '', roles: Array.isArray(session.roles) ? session.roles : [] };
-    } catch {
-      return null;
-    }
+  private sessionCookieOptions(): { withCredentials: true; headers: HttpHeaders } {
+    return { withCredentials: true, headers: new HttpHeaders({ [csrfHeaderName]: this.readCookie(csrfCookieName) ?? '' }) };
+  }
+
+  private readCookie(name: string): string | null {
+    const cookie = document.cookie.split('; ').find(value => value.startsWith(`${name}=`));
+    return cookie ? decodeURIComponent(cookie.substring(name.length + 1)) : null;
   }
 }

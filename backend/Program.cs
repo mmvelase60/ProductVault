@@ -100,7 +100,7 @@ public class Program
                 policy.WithOrigins(configuredCorsOrigins);
             }
 
-            policy.AllowAnyHeader().AllowAnyMethod();
+            policy.AllowAnyHeader().AllowAnyMethod().AllowCredentials();
         }));
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
@@ -112,8 +112,10 @@ public class Program
         builder.Services.AddScoped<IAuditTrailService, AuditTrailService>();
         builder.Services.AddScoped<IExcelProductService, ExcelProductService>();
         builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection(EmailOptions.SectionName));
+        builder.Services.Configure<RefreshTokenOptions>(builder.Configuration.GetSection(RefreshTokenOptions.SectionName));
         builder.Services.AddScoped<IApplicationEmailSender, SmtpEmailSender>();
         builder.Services.AddScoped<IEmailVerificationCodeService, EmailVerificationCodeService>();
+        builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
         builder.Services.AddScoped<RoleBootstrapper>();
 
         var app = builder.Build();

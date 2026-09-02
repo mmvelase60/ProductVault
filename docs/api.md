@@ -1,7 +1,7 @@
 # API documentation
 
 Base path: `https://localhost:7253/api`  
-Authentication: JWT bearer token for every route except registration and login.
+Authentication: JWT bearer token for protected routes. Browser session refresh and sign-out use secure cookies plus a CSRF header.
 
 ```text
 Authorization: Bearer <access-token>
@@ -15,6 +15,8 @@ Swagger is available at `/swagger` while the API runs in Development. Every prot
 | --- | --- | --- |
 | POST | `/auth/register` | Register an Identity user and send a six-digit verification code. |
 | POST | `/auth/login` | Validate confirmed credentials and receive a JWT. |
+| POST | `/auth/refresh` | Rotate the browser session and receive a fresh access token. |
+| POST | `/auth/logout` | Revoke the current browser session and clear its cookies. |
 | POST | `/auth/verify-email-code` | Verify an email address using its email address and six-digit code. |
 | POST | `/auth/resend-confirmation` | Request a replacement verification code. |
 | POST | `/auth/forgot-password` | Request a password-reset email. |
@@ -33,7 +35,7 @@ Swagger is available at `/swagger` while the API runs in Development. Every prot
 { "email": "user@example.com", "code": "123456" }
 ```
 
-Registration generates a username from the uppercase first-name initial and surname (`Mthokozisi Mvelase` becomes `MMvelase`), adding a numeric suffix only when needed for uniqueness. It returns `202 Accepted` after sending the verification code. Codes are single-use, expire after 10 minutes, and are invalidated after five incorrect attempts. Login returns `accessToken`, `expiresAt`, `email`, and the caller's `roles` only after the email is verified. Password-recovery and resend endpoints return a generic success message so callers cannot use them to enumerate accounts.
+Registration generates a username from the uppercase first-name initial and surname (`Mthokozisi Mvelase` becomes `MMvelase`), adding a numeric suffix only when needed for uniqueness. It returns `202 Accepted` after sending the verification code. Codes are single-use, expire after 10 minutes, and are invalidated after five incorrect attempts. Login and refresh return `accessToken`, `expiresAt`, `email`, and the caller's `roles` only after the email is verified. Access tokens expire after 15 minutes and are not persisted in browser storage. Login additionally writes rotating `HttpOnly` refresh and CSRF cookies; refresh and logout must include the readable CSRF cookie value in `X-CSRF-TOKEN`. Password-recovery and resend endpoints return a generic success message so callers cannot use them to enumerate accounts.
 
 Authentication endpoints use a fixed-window limit of five requests per minute per client and endpoint. A rejected request returns `429 Too Many Requests` with an RFC 7807 problem-details body, allowing the Angular client to give a clear retry message. Unhandled server failures also use problem-details responses with a trace identifier for support and diagnostics.
 

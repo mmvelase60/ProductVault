@@ -8,7 +8,7 @@ using ProductVault.Services;
 namespace ProductVault.Controllers.Api;
 
 [ApiController, Authorize, Route("api/profile")]
-public sealed class ProfileApiController(UserManager<ApplicationUser> users, IUsernameGenerator usernames, IAuditTrailService audit, ProductVault.Data.ApplicationDbContext db) : ControllerBase
+public sealed class ProfileApiController(UserManager<ApplicationUser> users, IUsernameGenerator usernames, IAuditTrailService audit, IRefreshTokenService refreshTokens, ProductVault.Data.ApplicationDbContext db) : ControllerBase
 {
     private string UserId => users.GetUserId(User)!;
 
@@ -50,9 +50,10 @@ public sealed class ProfileApiController(UserManager<ApplicationUser> users, IUs
         var result = await users.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
         if (!result.Succeeded) return BadRequest(new { errors = result.Errors.ToDictionary(error => error.Code, error => error.Description) });
 
+        await refreshTokens.RevokeAllAsync(user.Id, HttpContext.RequestAborted);
         audit.Record(UserId, UserId, "Changed password", "Profile", user.Id, user.UserName ?? "Profile");
         await db.SaveChangesAsync();
-        return Ok(new MessageResponse("Password changed successfully."));
+        return Ok(new MessageResponse("Password changed. Please sign in again."));
     }
 
     private async Task<ProfileResponse> ToResponseAsync(ApplicationUser user) => new(

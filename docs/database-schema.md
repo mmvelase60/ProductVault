@@ -60,4 +60,8 @@ erDiagram
 - `Price` uses `decimal(18,2)` to avoid floating-point currency errors.
 - `OwnerId` and `CreatedBy` are required for both domain tables.
 - `RowVersion` is a MySQL timestamp-backed concurrency token that prevents lost updates.
+
+## RefreshTokens
+
+Browser sessions are server-revocable. This table stores a SHA-256 hash of each refresh token and its paired CSRF value, never the raw cookie secrets. It also records expiry, revocation, and the replacement token hash produced during rotation. Each row belongs to one Identity user and is cascade-deleted if that account is deleted.
 - Product codes are globally unique; category codes are unique within the owning user's catalogue.

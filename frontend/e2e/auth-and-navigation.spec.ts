@@ -1,5 +1,17 @@
 import { expect, test } from '@playwright/test';
 
+async function mockSessionRefresh(page: import('@playwright/test').Page): Promise<void> {
+  await page.route('**/api/auth/refresh', async route => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify({
+      accessToken: 'test-token',
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+      email: 'candidate@example.com',
+      roles: ['User']
+    })
+  }));
+}
+
 test.describe('authentication and navigation', () => {
   test('redirects anonymous visitors to sign in and provides a keyboard skip link', async ({ page }) => {
     await page.goto('/dashboard');
@@ -25,12 +37,7 @@ test.describe('authentication and navigation', () => {
 
 test.describe('responsive navigation', () => {
   test('shows a usable account menu on a small viewport', async ({ page }) => {
-    await page.addInitScript(() => localStorage.setItem('productvault-session', JSON.stringify({
-      accessToken: 'test-token',
-      expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
-      email: 'candidate@example.com',
-      roles: ['User']
-    })));
+    await mockSessionRefresh(page);
     await page.route('**/api/dashboard', async route => route.fulfill({
       contentType: 'application/json',
       body: JSON.stringify({ productCount: 0, activeCategoryCount: 0, totalCategoryCount: 0, catalogueValue: 0, lowStockCount: 0, recentProducts: [], activity: [] })
@@ -48,12 +55,7 @@ test.describe('responsive navigation', () => {
 
 test.describe('catalogue data rendering', () => {
   test('renders categories and products as soon as their API responses arrive', async ({ page }) => {
-    await page.addInitScript(() => localStorage.setItem('productvault-session', JSON.stringify({
-      accessToken: 'test-token',
-      expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
-      email: 'candidate@example.com',
-      roles: ['User']
-    })));
+    await mockSessionRefresh(page);
     await page.route('**/api/categories', async route => route.fulfill({
       contentType: 'application/json',
       body: JSON.stringify([{ categoryId: 1, name: 'Cleaning material', categoryCode: 'CLE001', isActive: true, productCount: 1, rowVersion: 'AQ==' }])

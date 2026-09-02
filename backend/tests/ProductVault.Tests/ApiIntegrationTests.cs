@@ -29,6 +29,32 @@ public sealed class ApiIntegrationTests : IClassFixture<ProductVaultApiFactory>
     }
 
     [Fact]
+    public async Task Refresh_token_rotates_and_logout_revokes_the_browser_session()
+    {
+        var email = $"session-{Guid.NewGuid():N}@example.com";
+        await factory.CreateUserAsync(email, "User");
+        var client = factory.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions { BaseAddress = new Uri("https://localhost") });
+
+        var login = await client.PostAsJsonAsync("/api/auth/login", new { email, password = "Password1" });
+        login.EnsureSuccessStatusCode();
+        var csrf = CookieValue(login, "productvault_csrf");
+        Assert.False(string.IsNullOrWhiteSpace(csrf));
+        client.DefaultRequestHeaders.Add("X-CSRF-TOKEN", csrf);
+
+        var refresh = await client.PostAsJsonAsync("/api/auth/refresh", new { });
+        refresh.EnsureSuccessStatusCode();
+        var rotatedCsrf = CookieValue(refresh, "productvault_csrf");
+        Assert.NotEqual(csrf, rotatedCsrf);
+        client.DefaultRequestHeaders.Remove("X-CSRF-TOKEN");
+        client.DefaultRequestHeaders.Add("X-CSRF-TOKEN", rotatedCsrf);
+
+        var logout = await client.PostAsJsonAsync("/api/auth/logout", new { });
+        Assert.Equal(HttpStatusCode.NoContent, logout.StatusCode);
+        var afterLogout = await client.PostAsJsonAsync("/api/auth/refresh", new { });
+        Assert.Equal(HttpStatusCode.Unauthorized, afterLogout.StatusCode);
+    }
+
+    [Fact]
     public async Task Product_list_is_scoped_to_the_authenticated_owner()
     {
         var ownerEmail = $"owner-{Guid.NewGuid():N}@example.com";
@@ -82,4 +108,12 @@ public sealed class ApiIntegrationTests : IClassFixture<ProductVaultApiFactory>
     private sealed record StockUpdate(StockProduct Product, StockMovement Movement);
     private sealed record StockProduct(int QuantityInStock);
     private sealed record StockMovement(int QuantityBefore, int QuantityAfter, string Operation);
+
+    private static string CookieValue(HttpResponseMessage response, string name)
+    {
+        var cookie = response.Headers.GetValues("Set-Cookie")
+            .FirstOrDefault(value => value.StartsWith($"{name}=", StringComparison.Ordinal));
+        Assert.NotNull(cookie);
+        return cookie!.Split(';', 2)[0].Substring(name.Length + 1);
+    }
 }

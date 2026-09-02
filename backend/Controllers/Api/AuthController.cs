@@ -22,8 +22,10 @@ public class AuthController(
     IApplicationEmailSender emailSender,
     IEmailVerificationCodeService verificationCodes,
     IUsernameGenerator usernameGenerator,
+    IRefreshTokenService refreshTokens,
     RoleBootstrapper roleBootstrapper,
     IOptions<EmailOptions> emailOptions,
+    IOptions<RefreshTokenOptions> tokenOptions,
     ILogger<AuthController> logger) : ControllerBase
 {
     [HttpPost("register")]
@@ -75,6 +77,8 @@ public class AuthController(
             return StatusCode(StatusCodes.Status403Forbidden,
                 new MessageResponse("Verify your email address before signing in.", "email_confirmation_required"));
 
+        var issue = await refreshTokens.IssueAsync(user, HttpContext.RequestAborted);
+        WriteSessionCookies(issue);
         return Ok(await CreateResponseAsync(user));
     }
 
@@ -164,7 +168,38 @@ public class AuthController(
         if (!result.Succeeded)
             return BadRequest(new { errors = result.Errors.ToDictionary(error => error.Code, error => error.Description) });
 
+        await refreshTokens.RevokeAllAsync(user.Id, HttpContext.RequestAborted);
         return Ok(new MessageResponse("Password reset successfully. You can now sign in."));
+    }
+
+    [HttpPost("refresh")]
+    public async Task<ActionResult<AuthResponse>> Refresh()
+    {
+        if (!TryGetSessionRequest(out var token, out var csrfToken))
+            return Unauthorized(new MessageResponse("Your session has ended. Please sign in again."));
+
+        var result = await refreshTokens.RotateAsync(token, csrfToken, HttpContext.RequestAborted);
+        if (result is null)
+        {
+            ClearSessionCookies();
+            return Unauthorized(new MessageResponse("Your session has ended. Please sign in again."));
+        }
+
+        WriteSessionCookies(result.Issue);
+        return Ok(await CreateResponseAsync(result.User));
+    }
+
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout()
+    {
+        if (!TryGetSessionRequest(out var token, out var csrfToken))
+            return NoContent();
+
+        if (!await refreshTokens.RevokeAsync(token, csrfToken, HttpContext.RequestAborted))
+            return BadRequest(new MessageResponse("The sign-out request could not be verified."));
+
+        ClearSessionCookies();
+        return NoContent();
     }
 
     private async Task SendVerificationCodeEmailAsync(ApplicationUser user)
@@ -192,7 +227,7 @@ public class AuthController(
 
     private async Task<AuthResponse> CreateResponseAsync(ApplicationUser user)
     {
-        var expiresAt = DateTime.UtcNow.AddHours(8);
+        var expiresAt = DateTime.UtcNow.AddMinutes(Math.Clamp(tokenOptions.Value.AccessTokenLifetimeMinutes, 5, 60));
         var roles = await users.GetRolesAsync(user);
         var claims = new List<Claim>
         {
@@ -207,6 +242,43 @@ public class AuthController(
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         var token = new JwtSecurityToken(configuration["Jwt:Issuer"], configuration["Jwt:Audience"], claims, expires: expiresAt, signingCredentials: credentials);
         return new AuthResponse(new JwtSecurityTokenHandler().WriteToken(token), expiresAt, user.Email ?? string.Empty, roles.ToArray());
+    }
+
+    private bool TryGetSessionRequest(out string token, out string csrfToken)
+    {
+        token = Request.Cookies[AuthenticationCookieNames.RefreshToken] ?? string.Empty;
+        csrfToken = Request.Headers[AuthenticationCookieNames.CsrfHeader].ToString();
+        return !string.IsNullOrWhiteSpace(token) && !string.IsNullOrWhiteSpace(csrfToken);
+    }
+
+    private void WriteSessionCookies(RefreshTokenIssue issue)
+    {
+        var expiresAt = new DateTimeOffset(issue.ExpiresAt);
+        Response.Cookies.Append(AuthenticationCookieNames.RefreshToken, issue.Token, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = true,
+            SameSite = SameSiteMode.None,
+            IsEssential = true,
+            Path = "/api/auth",
+            Expires = expiresAt
+        });
+        Response.Cookies.Append(AuthenticationCookieNames.CsrfToken, issue.CsrfToken, new CookieOptions
+        {
+            HttpOnly = false,
+            Secure = true,
+            SameSite = SameSiteMode.None,
+            IsEssential = true,
+            Path = "/api/auth",
+            Expires = expiresAt
+        });
+    }
+
+    private void ClearSessionCookies()
+    {
+        var options = new CookieOptions { Secure = true, SameSite = SameSiteMode.None, Path = "/api/auth" };
+        Response.Cookies.Delete(AuthenticationCookieNames.RefreshToken, options);
+        Response.Cookies.Delete(AuthenticationCookieNames.CsrfToken, options);
     }
 }
 

@@ -4,11 +4,11 @@ Use this guide to practise explaining ProductVault clearly in an intermediate so
 
 ## The project in 30 seconds
 
-> “ProductVault is a private catalogue-management application for products and categories. I built the user interface in Angular and a separate ASP.NET Core API backed by MySQL. The important part is that security and ownership are enforced on the API: the browser sends a JWT, and every catalogue operation derives the owner from that validated token. I added email-code verification, imports, inventory history, role-based administration, tests, monitoring, and documentation to show how I approach a production-minded CRUD application.”
+> “ProductVault is a private catalogue-management application for products and categories. I built the user interface in Angular and a separate ASP.NET Core API backed by MySQL. The important part is that security and ownership are enforced on the API: Angular holds a short-lived JWT only in memory, restores the session through a rotating HttpOnly cookie, and every catalogue operation derives the owner from the validated token. I added email-code verification, imports, inventory history, role-based administration, tests, monitoring, and documentation to show how I approach a production-minded CRUD application.”
 
 ## The project in 90 seconds
 
-> “I chose a modular monolith because this is a focused catalogue workflow, not a case where microservices would solve a real scaling or team-boundary problem. Angular handles the browser experience, including route protection and bearer-token attachment. ASP.NET Core Identity owns password hashing and users; the API verifies the JWT and applies owner filtering before data reaches EF Core or MySQL.
+> “I chose a modular monolith because this is a focused catalogue workflow, not a case where microservices would solve a real scaling or team-boundary problem. Angular handles the browser experience, including route protection and short-lived bearer-token attachment. ASP.NET Core Identity owns password hashing and users; the API verifies the JWT and applies owner filtering before data reaches EF Core or MySQL.
 >
 > Users must verify a single-use, six-digit email code before signing in. Authentication endpoints are rate limited, and the frontend gives useful feedback for expired sessions, rate limits, and server failures. Product and category edits use row versions to prevent silent overwrites. Inventory is stored both as a fast current quantity and immutable movement history, so changes are explainable. Finally, I use unit tests, HTTP integration tests, and browser-level Playwright tests because a good UI still needs repeatable evidence that the key journeys work.”
 
@@ -17,14 +17,14 @@ Use this guide to practise explaining ProductVault clearly in an intermediate so
 | Topic | Truthful point to make |
 | --- | --- |
 | Architecture | Angular SPA → ASP.NET Core 8 Web API → EF Core → MySQL. |
-| Identity | ASP.NET Core Identity hashes passwords; ProductVault adds email-code verification and role assignment. |
+| Identity | ASP.NET Core Identity hashes passwords; ProductVault adds email-code verification, role assignment, short-lived in-memory access tokens, and rotating revocable refresh sessions. |
 | Authorization | The API derives the caller from the JWT and applies `OwnerId` filtering; the client never sends an owner ID. |
 | Username | The server generates `first initial + surname`, for example `MMvelase`, and adds a suffix if needed. |
 | Imports | CSV/XLSX imports accept up to 500 rows, create categories first, skip duplicates, and return row-level errors. |
 | Inventory | Product quantity is quick to display; immutable stock movements explain every receive or adjustment. |
 | Concurrency | Product/category updates carry a MySQL row version. Stale writes return a conflict instead of overwriting someone else’s change. |
 | Resilience | Authentication is limited to five requests per minute per client and endpoint; errors use problem-details responses with a trace ID. |
-| Quality | 19 .NET unit/integration tests and 8 Playwright checks currently pass. |
+| Quality | 20 .NET unit/integration tests and 8 Playwright checks currently pass. |
 | Scope | No live supplier/ERP yet. The Import Centre is the prepared integration boundary, not a claim of a finished external integration. |
 
 ## Seven-minute rehearsal
@@ -49,9 +49,9 @@ Use the detailed [demo package](interview-demo.md) as your script. Rehearse this
 
 “I do not trust an owner ID from the browser. The API validates the bearer token, reads the user ID from its claims, then scopes every category and product query and mutation to that owner. The integration tests exercise owner isolation through the real HTTP pipeline.”
 
-### Why JWT instead of server sessions?
+### Why use JWTs and refresh cookies together?
 
-“The frontend and API are separate applications. JWT gives a clean, stateless boundary. The API still performs the authorization decision for every protected request; a token does not make the browser trusted.”
+“The short-lived JWT gives the separately hosted Angular app a clean bearer-token boundary for API requests. I keep it in memory instead of local storage. A rotating HttpOnly refresh cookie restores the session after a page reload, can be revoked on the server, and is protected by a CSRF header. That gives me usability without treating browser storage as a safe secret vault.”
 
 ### How is authentication protected from abuse?
 
@@ -67,7 +67,7 @@ Use the detailed [demo package](interview-demo.md) as your script. Rehearse this
 
 ### What would you improve next?
 
-“For the next production increment I would add token refresh/revocation and a background email queue, then add a source-specific ERP adapter once the external system’s contract is known. I would not build those speculatively because they introduce operational decisions that need real requirements.”
+“For the next production increment I would add a background email queue and a source-specific ERP adapter once the external system’s contract is known. I would not build those speculatively because they introduce operational decisions that need real requirements.”
 
 ## Recruiter-friendly explanation
 
